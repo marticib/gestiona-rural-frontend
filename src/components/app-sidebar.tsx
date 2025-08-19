@@ -8,6 +8,8 @@ import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user.jsx"
+import { useNavigation } from "@/hooks/use-navigation.js"
+import { useRole } from "@/hooks/use-role.js"
 import {
   Sidebar,
   SidebarContent,
@@ -17,14 +19,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import {
-  navMain,
-  navDocuments,
-  navSecondary,
-  sidebarConfig,
-} from "@/config/navigation"
+import { sidebarConfig } from "@/config/navigation"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { navMain, navDocuments, navSecondary } = useNavigation()
+  const { isClient } = useRole()
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -34,7 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <Link to="/dashboard">
+              <Link to={isClient() ? "/welcome" : "/dashboard"}>
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">{sidebarConfig.title}</span>
               </Link>
@@ -44,8 +44,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavDocuments items={navDocuments} />
-        <NavSecondary items={navSecondary} className="mt-auto" />
+        {navDocuments.length > 0 && <NavDocuments items={navDocuments} />}
+        {navSecondary.length > 0 && <NavSecondary items={navSecondary} className="mt-auto" />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

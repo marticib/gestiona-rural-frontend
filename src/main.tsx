@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './contexts/auth-context.jsx'
 import { router } from './router/index.jsx'
 import { Toaster } from '@/components/ui/sonner'
+import './lib/api-interceptor.js' // Importar l'interceptor API
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(

@@ -1,8 +1,27 @@
 import { useAuth } from '@/contexts/auth-context.jsx'
 import { Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { authService } from '@/services/auth.js'
 
 export function AuthGuard({ children }) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, logout } = useAuth()
+
+  // Verificar periòdicament si el token és vàlid
+  useEffect(() => {
+    const checkTokenPeriodically = async () => {
+      if (user) {
+        const isValid = await authService.validateToken()
+        if (!isValid) {
+          logout()
+        }
+      }
+    }
+
+    // Verificar cada 5 minuts
+    const interval = setInterval(checkTokenPeriodically, 5 * 60 * 1000)
+    
+    return () => clearInterval(interval)
+  }, [user, logout])
 
   // Mentre carrega, pots mostrar un spinner o similar
   if (isLoading) {

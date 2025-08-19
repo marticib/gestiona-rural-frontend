@@ -9,28 +9,51 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true)
   const toast = useToast()
 
-  // Comprovar si hi ha un token guardat quan es carrega l'app
+  // Comprovar si hi ha un token guardat i validar-lo quan es carrega l'app
   useEffect(() => {
-    const savedToken = localStorage.getItem("auth_token")
-    const savedUser = localStorage.getItem("user")
-    
-    if (savedToken && savedUser) {
-      try {
-        setToken(savedToken)
-        setUser(JSON.parse(savedUser))
-      } catch (error) {
-        // Si hi ha error parsing l'usuari, netejar localStorage
-        localStorage.removeItem("auth_token")
-        localStorage.removeItem("user")
+    const validateToken = async () => {
+      const savedToken = localStorage.getItem("auth_token")
+      const savedUser = localStorage.getItem("user")
+      
+      if (savedToken && savedUser) {
+        try {
+          // Verificar si el token és vàlid consultant el backend
+          const response = await fetch("http://192.168.12.36:8000/api/auth/user", {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${savedToken}`,
+              "Accept": "application/json",
+            },
+          })
+
+          if (response.ok) {
+            // Token vàlid, restaurar l'estat
+            const data = await response.json()
+            setToken(savedToken)
+            setUser(data.user)
+          } else {
+            // Token invàlid, netejar localStorage
+            localStorage.removeItem("auth_token")
+            localStorage.removeItem("user")
+            console.log("Token expirat o invàlid, sessió netejada")
+          }
+        } catch (error) {
+          // Error de connexió o parsing, netejar localStorage
+          console.error("Error validant token:", error)
+          localStorage.removeItem("auth_token")
+          localStorage.removeItem("user")
+        }
       }
+      
+      setIsLoading(false)
     }
-    
-    setIsLoading(false)
+
+    validateToken()
   }, [])
 
   const login = async (email, password) => {
     try {
-      const response = await fetch("http://localhost:8000/api/auth/login", {
+      const response = await fetch("http://192.168.12.36:8000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -2,13 +2,19 @@ import { createBrowserRouter, Navigate } from "react-router-dom"
 import { RootLayout } from "@/components/root-layout"
 import { DashboardPage } from "@/pages/dashboard"
 import { ProjectsPage } from "@/pages/projects"
-import { ClientsPage } from "@/pages/clients"
 import { AnalyticsPage } from "@/pages/analytics"
 import { SettingsPage } from "@/pages/settings"
 import { LoginPage } from "@/pages/login"
 import { ToastExamplePage } from "@/pages/toast-example.jsx"
+import { WelcomePage } from "@/pages/welcome"
 import { AuthGuard } from "@/components/auth-guard.jsx"
 import { PublicRoute } from "@/components/public-route.jsx"
+import { RoleGuard } from "@/components/role-guard.jsx"
+import { RoleBasedRedirect } from "@/components/role-based-redirect.jsx"
+import PropietarisPage from "@/pages/propietaris"
+import AllotjamentsPage from "@/pages/allotjaments"
+import ClientsPage from "@/pages/clients/index.jsx"
+import ReservesPage from "@/pages/reserves/index.jsx"
 
 // Component per a pàgines que encara no estan implementades
 function ComingSoon({ title }) {
@@ -41,19 +47,36 @@ export const router = createBrowserRouter([
       </AuthGuard>
     ),
     children: [
-      // Redirect de la root al dashboard
+      // Redirect de la root basat en el rol
       {
         index: true,
-        element: <Navigate to="/dashboard" replace />,
+        element: <RoleBasedRedirect />,
       },
-      // Rutes principals
+      // Pàgina de benvinguda per clients
+      {
+        path: "welcome",
+        element: (
+          <RoleGuard allowedRoles={['client']}>
+            <WelcomePage />
+          </RoleGuard>
+        ),
+      },
+      // Rutes per admin (superadmin i propietari)
       {
         path: "dashboard",
-        element: <DashboardPage />,
+        element: (
+          <RoleGuard allowedRoles={['superadmin', 'propietari']}>
+            <DashboardPage />
+          </RoleGuard>
+        ),
       },
       {
         path: "projects",
-        element: <ProjectsPage />,
+        element: (
+          <RoleGuard allowedRoles={['superadmin', 'propietari']}>
+            <ProjectsPage />
+          </RoleGuard>
+        ),
         children: [
           {
             path: "active",
@@ -67,7 +90,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "clients",
-        element: <ClientsPage />,
+        element: (
+          <RoleGuard allowedRoles={['superadmin', 'propietari']}>
+            <ClientsPage />
+          </RoleGuard>
+        ),
         children: [
           {
             path: "active",
@@ -76,6 +103,88 @@ export const router = createBrowserRouter([
           {
             path: "new",
             element: <ComingSoon title="Nous Clients" />,
+          },
+        ],
+      },
+      {
+        path: "propietaris",
+        element: (
+          <RoleGuard allowedRoles={['superadmin']}>
+            <PropietarisPage />
+          </RoleGuard>
+        ),
+        children: [
+          {
+            path: "actius",
+            element: <ComingSoon title="Propietaris Actius" />,
+          },
+          {
+            path: "nou",
+            element: <ComingSoon title="Nou Propietari" />,
+          },
+          {
+            path: ":id",
+            element: <ComingSoon title="Detalls del Propietari" />,
+          },
+          {
+            path: ":id/editar",
+            element: <ComingSoon title="Editar Propietari" />,
+          },
+        ],
+      },
+      {
+        path: "allotjaments",
+        element: (
+          <RoleGuard allowedRoles={['superadmin', 'propietari']}>
+            <AllotjamentsPage />
+          </RoleGuard>
+        ),
+        children: [
+          {
+            path: "actius",
+            element: <ComingSoon title="Allotjaments Actius" />,
+          },
+          {
+            path: "nou",
+            element: <ComingSoon title="Nou Allotjament" />,
+          },
+          {
+            path: ":id",
+            element: <ComingSoon title="Detalls de l'Allotjament" />,
+          },
+          {
+            path: ":id/editar",
+            element: <ComingSoon title="Editar Allotjament" />,
+          },
+        ],
+      },
+      {
+        path: "reserves",
+        element: (
+          <RoleGuard allowedRoles={['superadmin', 'propietari']}>
+            <ReservesPage />
+          </RoleGuard>
+        ),
+        children: [
+          {
+            path: "nova",
+            element: <ComingSoon title="Nova Reserva" />,
+          },
+          {
+            path: "avui",
+            element: <ComingSoon title="Reserves d'Avui" />,
+          },
+          {
+            path: "pendents",
+            element: <ComingSoon title="Reserves Pendents" />,
+          },
+          {
+            path: ":id",
+            element: <ComingSoon title="Detalls de la Reserva" />,
+          },
+          {
+            path: ":id/editar",
+            element: <ComingSoon title="Editar Reserva" />,
           },
         ],
       },

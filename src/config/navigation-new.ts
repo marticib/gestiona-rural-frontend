@@ -74,25 +74,6 @@ export const navMain: NavItem[] = [
     ],
   },
   {
-    title: "Clients",
-    url: "/clients",
-    icon: IconUsers,
-    items: [
-      {
-        title: "Tots els Clients",
-        url: "/clients",
-      },
-      {
-        title: "Nou Client",
-        url: "/clients/nou",
-      },
-      {
-        title: "Clients Actius",
-        url: "/clients/actius",
-      },
-    ],
-  },
-  {
     title: "Allotjaments",
     url: "/allotjaments",
     icon: IconBuilding,
