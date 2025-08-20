@@ -14,7 +14,7 @@ export function useNavigation() {
   const clientNavigation = [
     {
       title: "Benvinguda",
-      url: "/welcome",
+      url: "/app/welcome",
       icon: IconHome,
       isActive: true,
     },
@@ -24,83 +24,83 @@ export function useNavigation() {
   const adminNavigation = [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/app/dashboard",
       icon: IconDashboard,
       isActive: true,
     },
     ...(canManagePropietaris() ? [{
       title: "Propietaris",
-      url: "/propietaris",
+      url: "/app/propietaris",
       icon: IconUsers,
       items: [
         {
           title: "Tots els Propietaris",
-          url: "/propietaris",
+          url: "/app/propietaris",
         },
         {
           title: "Nou Propietari",
-          url: "/propietaris/nou",
+          url: "/app/propietaris/nou",
         },
       ],
     }] : []),
     {
       title: "Clients",
-      url: "/clients",
+      url: "/app/clients",
       icon: IconUsers,
       items: [
         {
           title: "Tots els Clients",
-          url: "/clients",
+          url: "/app/clients",
         },
         {
           title: "Nou Client",
-          url: "/clients/nou",
+          url: "/app/clients/nou",
         },
         {
           title: "Clients Actius",
-          url: "/clients/actius",
+          url: "/app/clients/actius",
         },
       ],
     },
     {
       title: "Allotjaments",
-      url: "/allotjaments",
+      url: "/app/allotjaments",
       icon: IconBuilding,
       items: [
         {
           title: "Tots els Allotjaments",
-          url: "/allotjaments",
+          url: "/app/allotjaments",
         },
         {
           title: "Nou Allotjament",
-          url: "/allotjaments/nou",
+          url: "/app/allotjaments/nou",
         },
         {
           title: "Allotjaments Actius",
-          url: "/allotjaments/actius",
+          url: "/app/allotjaments/actius",
         },
       ],
     },
     {
       title: "Reserves",
-      url: "/reserves",
+      url: "/app/reserves",
       icon: IconCalendar,
       items: [
         {
           title: "Totes les Reserves",
-          url: "/reserves",
+          url: "/app/reserves",
         },
         {
           title: "Nova Reserva",
-          url: "/reserves/nova",
+          url: "/app/reserves/nova",
         },
         {
           title: "Reserves d'Avui",
-          url: "/reserves/avui",
+          url: "/app/reserves/avui",
         },
         {
           title: "Històric",
-          url: "/reserves/historic",
+          url: "/app/reserves/historic",
         },
       ],
     },

@@ -15,6 +15,8 @@ import PropietarisPage from "@/pages/propietaris"
 import AllotjamentsPage from "@/pages/allotjaments"
 import ClientsPage from "@/pages/clients/index.jsx"
 import ReservesPage from "@/pages/reserves/index.jsx"
+import HomePage from "@/pages/home/index.jsx"
+import RegisterPage from "@/pages/register/index.jsx"
 
 // Component per a pàgines que encara no estan implementades
 function ComingSoon({ title }) {
@@ -29,6 +31,15 @@ function ComingSoon({ title }) {
 }
 
 export const router = createBrowserRouter([
+  // Pàgina d'inici pública
+  {
+    path: "/",
+    element: (
+      <PublicRoute>
+        <HomePage />
+      </PublicRoute>
+    ),
+  },
   // Ruta pública del login
   {
     path: "/login",
@@ -38,9 +49,18 @@ export const router = createBrowserRouter([
       </PublicRoute>
     ),
   },
-  // Rutes protegides
+  // Ruta pública del registre
   {
-    path: "/",
+    path: "/register",
+    element: (
+      <PublicRoute>
+        <RegisterPage />
+      </PublicRoute>
+    ),
+  },
+  // Rutes protegides sota /app
+  {
+    path: "/app",
     element: (
       <AuthGuard>
         <RootLayout />

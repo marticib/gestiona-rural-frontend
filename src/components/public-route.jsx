@@ -18,7 +18,7 @@ export function PublicRoute({ children }) {
 
   // Si ja hi ha usuari, redirigeix al dashboard
   if (user) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to="/app" replace />
   }
 
   // Si no hi ha usuari, mostra el contingut (login)

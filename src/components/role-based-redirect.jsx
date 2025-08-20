@@ -5,13 +5,13 @@ export function RoleBasedRedirect() {
   const { isClient, canAccessAdmin } = useRole()
 
   if (isClient()) {
-    return <Navigate to="/welcome" replace />
+    return <Navigate to="/app/welcome" replace />
   }
   
   if (canAccessAdmin()) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to="/app/dashboard" replace />
   }
 
   // Fallback al dashboard
-  return <Navigate to="/dashboard" replace />
+  return <Navigate to="/app/dashboard" replace />
 }
