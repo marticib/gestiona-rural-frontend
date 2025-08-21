@@ -2,16 +2,19 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './contexts/auth-context.jsx'
-import { router } from './router/index.jsx'
+import { router } from './router'
 import { Toaster } from '@/components/ui/sonner'
 import './lib/api-interceptor.js' // Importar l'interceptor API
 import './index.css'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-      <Toaster />
-    </AuthProvider>
-  </StrictMode>,
-)
+const rootElement = document.getElementById('root')
+if (rootElement) {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </AuthProvider>
+    </StrictMode>,
+  )
+}

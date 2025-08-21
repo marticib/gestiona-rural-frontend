@@ -4,8 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3001 --host",
-    "build": "tsc -b && vite build",
+    "dev": "cp .env.local .env && vite --port 3001 --host",
+    "dev:prod": "cp .env.production .env && vite --port 3001 --host",
+    "build": "cp .env.production .env && vite build",
+    "build:dev": "cp .env.local .env && vite build",
+    "build:check": "cp .env.production .env && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

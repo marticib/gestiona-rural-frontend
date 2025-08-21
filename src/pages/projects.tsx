@@ -1,4 +1,4 @@
-import { IconFolder, IconPlus, IconSearch } from "@tabler/icons-react"
+import { IconFolder, IconPlus } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 
 export function ProjectsPage() {

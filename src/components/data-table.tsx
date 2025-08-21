@@ -12,7 +12,7 @@ export function DataTable({ data }: { data: any[] }) {
       <div className="p-6 pt-0">
         <div className="space-y-4">
           {data?.length ? (
-            data.map((item, index) => (
+            data.map((_, index) => (
               <div key={index} className="flex items-center">
                 <div className="ml-4 space-y-1">
                   <p className="text-sm font-medium leading-none">Sample Item {index + 1}</p>
