@@ -1,43 +1,18 @@
-import { authService } from './auth'
-
-const API_BASE_URL = 'http://192.168.12.36:8000/api'
+import { localApi } from './apiService'
 
 class ReservesApiService {
-  async getAuthHeaders() {
-    const token = authService.getToken()
-    return {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${token}`
-    }
-  }
 
   async getAll(params = {}) {
     try {
-      const url = new URL(`${API_BASE_URL}/reserves`)
-      
-      // Afegir paràmetres de consulta
-      Object.keys(params).forEach(key => {
-        if (params[key] !== '' && params[key] !== null && params[key] !== undefined) {
-          // Mapear els noms dels filtres frontend als noms de la BD
-          let paramKey = key
-          if (key === 'plataforma') paramKey = 'plataforma_origen'
-          url.searchParams.append(paramKey, params[key])
-        }
-      })
-
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en obtenir les reserves')
+      // Mapear els noms dels filtres frontend als noms de la BD
+      const mappedParams = { ...params }
+      if (mappedParams.plataforma) {
+        mappedParams.plataforma_origen = mappedParams.plataforma
+        delete mappedParams.plataforma
       }
 
-      return data
+      const response = await localApi.get('/reserves', { params: mappedParams })
+      return response.data
     } catch (error) {
       console.error('Error in getAll:', error)
       throw error
@@ -46,18 +21,8 @@ class ReservesApiService {
 
   async getById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/${id}`, {
-        method: 'GET',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en obtenir la reserva')
-      }
-
-      return data
+      const response = await localApi.get(`/reserves/${id}`)
+      return response.data
     } catch (error) {
       console.error('Error in getById:', error)
       throw error
@@ -66,19 +31,8 @@ class ReservesApiService {
 
   async create(reservaData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves`, {
-        method: 'POST',
-        headers: await this.getAuthHeaders(),
-        body: JSON.stringify(reservaData),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en crear la reserva')
-      }
-
-      return data
+      const response = await localApi.post('/reserves', reservaData)
+      return response.data
     } catch (error) {
       console.error('Error in create:', error)
       throw error
@@ -87,19 +41,8 @@ class ReservesApiService {
 
   async update(id, reservaData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/${id}`, {
-        method: 'PUT',
-        headers: await this.getAuthHeaders(),
-        body: JSON.stringify(reservaData),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en actualitzar la reserva')
-      }
-
-      return data
+      const response = await localApi.put(`/reserves/${id}`, reservaData)
+      return response.data
     } catch (error) {
       console.error('Error in update:', error)
       throw error
@@ -108,18 +51,8 @@ class ReservesApiService {
 
   async delete(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/${id}`, {
-        method: 'DELETE',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en eliminar la reserva')
-      }
-
-      return data
+      const response = await localApi.delete(`/reserves/${id}`)
+      return response.data
     } catch (error) {
       console.error('Error in delete:', error)
       throw error
@@ -128,18 +61,8 @@ class ReservesApiService {
 
   async confirmar(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/${id}/confirmar`, {
-        method: 'POST',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en confirmar la reserva')
-      }
-
-      return data
+      const response = await localApi.post(`/reserves/${id}/confirmar`)
+      return response.data
     } catch (error) {
       console.error('Error in confirmar:', error)
       throw error
@@ -148,18 +71,8 @@ class ReservesApiService {
 
   async marcarComPagada(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/${id}/pagar`, {
-        method: 'POST',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en marcar com a pagada')
-      }
-
-      return data
+      const response = await localApi.post(`/reserves/${id}/pagar`)
+      return response.data
     } catch (error) {
       console.error('Error in marcarComPagada:', error)
       throw error
@@ -168,19 +81,8 @@ class ReservesApiService {
 
   async cancellar(id, motiu = '') {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/${id}/cancellar`, {
-        method: 'POST',
-        headers: await this.getAuthHeaders(),
-        body: JSON.stringify({ motiu }),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en cancel·lar la reserva')
-      }
-
-      return data
+      const response = await localApi.post(`/reserves/${id}/cancellar`, { motiu })
+      return response.data
     } catch (error) {
       console.error('Error in cancellar:', error)
       throw error
@@ -189,18 +91,8 @@ class ReservesApiService {
 
   async checkIn(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/${id}/checkin`, {
-        method: 'POST',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en fer el check-in')
-      }
-
-      return data
+      const response = await localApi.post(`/reserves/${id}/checkin`)
+      return response.data
     } catch (error) {
       console.error('Error in checkIn:', error)
       throw error
@@ -209,18 +101,8 @@ class ReservesApiService {
 
   async checkOut(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/${id}/checkout`, {
-        method: 'POST',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en fer el check-out')
-      }
-
-      return data
+      const response = await localApi.post(`/reserves/${id}/checkout`)
+      return response.data
     } catch (error) {
       console.error('Error in checkOut:', error)
       throw error
@@ -229,18 +111,8 @@ class ReservesApiService {
 
   async getByAllotjament(allotjamentId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/allotjament/${allotjamentId}`, {
-        method: 'GET',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en obtenir les reserves de l\'allotjament')
-      }
-
-      return data
+      const response = await localApi.get(`/reserves/allotjament/${allotjamentId}`)
+      return response.data
     } catch (error) {
       console.error('Error in getByAllotjament:', error)
       throw error
@@ -249,18 +121,8 @@ class ReservesApiService {
 
   async getAvui() {
     try {
-      const response = await fetch(`${API_BASE_URL}/reserves/dashboard/avui`, {
-        method: 'GET',
-        headers: await this.getAuthHeaders(),
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en obtenir les reserves d\'avui')
-      }
-
-      return data
+      const response = await localApi.get('/reserves/dashboard/avui')
+      return response.data
     } catch (error) {
       console.error('Error in getAvui:', error)
       throw error

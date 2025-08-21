@@ -205,7 +205,7 @@ export const navSecondary: NavItem[] = [
 
 // Configuració del sidebar
 export const sidebarConfig = {
-  title: "Gestiona",
+  title: "Gestiona Rural",
   width: "16rem",
   headerHeight: "3.5rem",
   collapsible: true,

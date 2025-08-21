@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
+import ssoService from "@/services/ssoService"
+import { hubApi } from "@/services/apiService"
 
 const AuthContext = createContext(undefined)
 
@@ -11,26 +13,40 @@ export function AuthProvider({ children }) {
 
   // Comprovar si hi ha un token guardat i validar-lo quan es carrega l'app
   useEffect(() => {
-    const validateToken = async () => {
+    const initializeAuth = async () => {
+      // Primer, comprovar si hi ha paràmetres SSO a la URL
+      const ssoCheck = ssoService.checkSSO()
+      
+      if (ssoCheck.hasSSO) {
+        // Hi ha token SSO, verificar-lo
+        console.log('Token SSO detectat:', ssoCheck.token)
+        const ssoResult = await ssoService.verifySSO(ssoCheck.token)
+        
+        if (ssoResult.success) {
+          setToken(ssoResult.token)
+          setUser(ssoResult.user)
+          setIsLoading(false)
+          toast.success(`Benvingut/da des del Hub, ${ssoResult.user.name}!`)
+          return
+        } else {
+          console.error('Error verificant token SSO:', ssoResult.message)
+          toast.error('Error d\'autenticació SSO')
+        }
+      }
+
+      // Si no hi ha SSO, comprovar token local guardat
       const savedToken = localStorage.getItem("auth_token")
       const savedUser = localStorage.getItem("user")
       
       if (savedToken && savedUser) {
         try {
-          // Verificar si el token és vàlid consultant el backend
-          const response = await fetch("http://192.168.12.36:8000/api/auth/user", {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${savedToken}`,
-              "Accept": "application/json",
-            },
-          })
-
-          if (response.ok) {
+          // Verificar si el token és vàlid consultant el Hub API
+          const response = await hubApi.get('/auth/user')
+          
+          if (response.status === 200) {
             // Token vàlid, restaurar l'estat
-            const data = await response.json()
             setToken(savedToken)
-            setUser(data.user)
+            setUser(response.data.user)
           } else {
             // Token invàlid, netejar localStorage
             localStorage.removeItem("auth_token")
@@ -48,23 +64,21 @@ export function AuthProvider({ children }) {
       setIsLoading(false)
     }
 
-    validateToken()
+    initializeAuth()
   }, [])
 
   const login = async (email, password) => {
+    // En una aplicació SSO, redirigir al Hub per login
+    if (!email || !password) {
+      ssoService.redirectToHub()
+      return false
+    }
+
     try {
-      const response = await fetch("http://192.168.12.36:8000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      })
+      const response = await hubApi.post('/auth/login', { email, password })
 
-      const data = await response.json()
-
-      if (response.ok) {
+      if (response.status === 200) {
+        const data = response.data
         setToken(data.token)
         setUser(data.user)
         localStorage.setItem("auth_token", data.token)
@@ -84,16 +98,8 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      // Cridar al backend per fer logout si tenim token
-      if (token) {
-        await fetch("http://localhost:8000/api/auth/logout", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/json",
-          },
-        })
-      }
+      // Utilitzar el SSO service per logout
+      ssoService.logout()
     } catch (error) {
       console.error("Error en logout:", error)
     } finally {

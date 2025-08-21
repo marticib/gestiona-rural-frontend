@@ -1,3 +1,6 @@
+import { hubApi } from './apiService'
+import ssoService from './ssoService'
+
 class AuthService {
   getToken() {
     return localStorage.getItem('auth_token')
@@ -17,9 +20,16 @@ class AuthService {
     return !!this.getToken()
   }
 
+  setAuthData(token, user) {
+    localStorage.setItem('auth_token', token)
+    localStorage.setItem('user', JSON.stringify(user))
+  }
+
   logout() {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
+    // Redirect to Hub for logout
+    window.location.href = `${import.meta.env.VITE_HUB_URL}/logout`
   }
 
   async validateToken() {
@@ -30,21 +40,9 @@ class AuthService {
     }
 
     try {
-      const response = await fetch('http://192.168.12.36:8000/api/auth/user', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        return true
-      } else {
-        // Token invàlid, netejar localStorage
-        this.logout()
-        return false
-      }
+      // Validate token with Hub API
+      const response = await hubApi.get('/auth/user')
+      return response.status === 200
     } catch (error) {
       console.error('Error validating token:', error)
       this.logout()
@@ -52,12 +50,15 @@ class AuthService {
     }
   }
 
+  // Legacy method for backward compatibility
   async makeAuthenticatedRequest(url, options = {}) {
+    console.warn('makeAuthenticatedRequest is deprecated. Use hubApi or localApi instead.')
+    
     const token = this.getToken()
     
     if (!token) {
-      // Redirigir immediatament al login si no hi ha token
-      window.location.href = '/login'
+      // Redirect to Hub for authentication
+      window.location.href = `${import.meta.env.VITE_HUB_URL}/login`
       throw new Error('No authentication token available')
     }
 
@@ -78,16 +79,9 @@ class AuthService {
     try {
       const response = await fetch(url, config)
       
-      // Si la resposta és 401, el token ha expirat
+      // If response is 401, token has expired
       if (response.status === 401) {
         this.logout()
-        
-        // Mostrar missatge i redirigir
-        if (window.location.pathname !== '/login') {
-          alert('La teva sessió ha expirat. Hauràs de tornar a iniciar sessió.')
-          window.location.href = '/login'
-        }
-        
         throw new Error('Token expired')
       }
 

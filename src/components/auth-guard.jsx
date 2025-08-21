@@ -1,27 +1,17 @@
 import { useAuth } from '@/contexts/auth-context.jsx'
-import { Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import { authService } from '@/services/auth.js'
+import ssoService from '@/services/ssoService'
 
 export function AuthGuard({ children }) {
   const { user, isLoading, logout } = useAuth()
 
-  // Verificar periòdicament si el token és vàlid
+  // Si no hi ha usuari i no està carregant, redirigir al Hub
   useEffect(() => {
-    const checkTokenPeriodically = async () => {
-      if (user) {
-        const isValid = await authService.validateToken()
-        if (!isValid) {
-          logout()
-        }
-      }
+    if (!isLoading && !user) {
+      console.log('No authenticated user, redirecting to Hub...')
+      ssoService.redirectToHub()
     }
-
-    // Verificar cada 5 minuts
-    const interval = setInterval(checkTokenPeriodically, 5 * 60 * 1000)
-    
-    return () => clearInterval(interval)
-  }, [user, logout])
+  }, [isLoading, user])
 
   // Mentre carrega, pots mostrar un spinner o similar
   if (isLoading) {
@@ -35,9 +25,16 @@ export function AuthGuard({ children }) {
     )
   }
 
-  // Si no hi ha usuari, redirigeix al login
+  // Si no hi ha usuari, mostrar loading mentre es redirigeix
   if (!user) {
-    return <Navigate to="/login" replace />
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Redirigint al Hub...</p>
+        </div>
+      </div>
+    )
   }
 
   // Si hi ha usuari, mostra el contingut
