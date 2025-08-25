@@ -34,8 +34,8 @@ export function NavUser() {
   const { isMobile } = useSidebar()
   const { user, logout } = useAuth()
 
-  // Si no hi ha usuari autenticat, no mostrem res
-  if (!user) {
+  // Si no hi ha usuari autenticat o les propietats necessàries, no mostrem res
+  if (!user || !user.name || !user.email) {
     return null
   }
 
@@ -54,12 +54,12 @@ export function NavUser() {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarFallback className="rounded-lg">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.name?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate font-semibold">{user.name || 'Usuari'}</span>
+                <span className="truncate text-xs">{user.email || ''}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>

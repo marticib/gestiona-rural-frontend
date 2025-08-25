@@ -26,7 +26,7 @@ export function RoleGuard({ children, allowedRoles, section, fallback = null }) 
 // Component per mostrar contingut només per a superadmin
 export function SuperadminOnly({ children, fallback = null }) {
   return (
-    <RoleGuard allowedRoles={['superadmin']} fallback={fallback}>
+    <RoleGuard allowedRoles={['superadmin', 'super_admin']} fallback={fallback}>
       {children}
     </RoleGuard>
   )
@@ -35,7 +35,7 @@ export function SuperadminOnly({ children, fallback = null }) {
 // Component per mostrar contingut només per a admin (superadmin + propietari)
 export function AdminOnly({ children, fallback = null }) {
   return (
-    <RoleGuard allowedRoles={['superadmin', 'propietari']} fallback={fallback}>
+    <RoleGuard allowedRoles={['superadmin', 'super_admin', 'propietari', 'admin']} fallback={fallback}>
       {children}
     </RoleGuard>
   )
@@ -44,7 +44,7 @@ export function AdminOnly({ children, fallback = null }) {
 // Component per mostrar contingut només per a clients
 export function ClientOnly({ children, fallback = null }) {
   return (
-    <RoleGuard allowedRoles={['client']} fallback={fallback}>
+    <RoleGuard allowedRoles={['client', 'user']} fallback={fallback}>
       {children}
     </RoleGuard>
   )

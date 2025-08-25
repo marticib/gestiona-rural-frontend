@@ -4,7 +4,6 @@ import { DashboardPage } from "@/pages/dashboard"
 import { ProjectsPage } from "@/pages/projects"
 import { AnalyticsPage } from "@/pages/analytics"
 import { SettingsPage } from "@/pages/settings"
-import { LoginPage } from "@/pages/login"
 import { ToastExamplePage } from "@/pages/toast-example.jsx"
 import { WelcomePage } from "@/pages/welcome"
 import { AuthGuard } from "@/components/auth-guard.jsx"
@@ -17,6 +16,7 @@ import ClientsPage from "@/pages/clients/index.jsx"
 import ReservesPage from "@/pages/reserves/index.jsx"
 import HomePage from "@/pages/home/index.jsx"
 import RegisterPage from "@/pages/register/index.jsx"
+import { LoginPage } from "@/pages/login"
 
 // Component per a pàgines que encara no estan implementades
 function ComingSoon({ title }) {
