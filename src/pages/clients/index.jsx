@@ -62,6 +62,9 @@ export default function ClientsPage() {
   const [showNouModal, setShowNouModal] = useState(false)
   const { success, error } = useToast()
   const { isSuperadmin } = useRole()
+  
+  // Memoitzar el resultat de isSuperadmin per evitar re-renders
+  const isAdmin = isSuperadmin()
 
   const generes = [
     { value: 'home', label: 'Home' },
@@ -83,7 +86,7 @@ export default function ClientsPage() {
       }
       
       // Només afegir filtre de propietari si és superadmin
-      if (isSuperadmin() && filterPropietari !== 'all') {
+      if (isAdmin && filterPropietari !== 'all') {
         params.propietari_id = filterPropietari
       }
       
@@ -109,7 +112,7 @@ export default function ClientsPage() {
 
   const carregarPropietaris = async () => {
     // Només carregar propietaris si és superadmin
-    if (!isSuperadmin()) {
+    if (!isAdmin) {
       return
     }
     
@@ -145,11 +148,11 @@ export default function ClientsPage() {
 
   useEffect(() => {
     carregarPropietaris()
-  }, [isSuperadmin])
+  }, [isAdmin])
 
   useEffect(() => {
     carregarClients()
-  }, [searchTerm, filterEstat, filterNacionalitat, filterGenere, ...(isSuperadmin() ? [filterPropietari] : [])])
+  }, [searchTerm, filterEstat, filterNacionalitat, filterGenere, isAdmin, filterPropietari])
 
   const getEstatBadge = (estat) => {
     switch (estat) {

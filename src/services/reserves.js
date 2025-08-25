@@ -4,14 +4,16 @@ class ReservesApiService {
 
   async getAll(params = {}) {
     try {
-      // Mapear els noms dels filtres frontend als noms de la BD
-      const mappedParams = { ...params }
-      if (mappedParams.plataforma) {
-        mappedParams.plataforma_origen = mappedParams.plataforma
-        delete mappedParams.plataforma
-      }
+      // Filtrar paràmetres buits abans d'enviar
+      const cleanParams = {}
+      Object.keys(params).forEach(key => {
+        const value = params[key]
+        if (value !== null && value !== undefined && value !== '') {
+          cleanParams[key] = value
+        }
+      })
 
-      const response = await localApi.get('/reserves', { params: mappedParams })
+      const response = await localApi.get('/reserves', { params: cleanParams })
       return response.data
     } catch (error) {
       console.error('Error in getAll:', error)

@@ -19,6 +19,11 @@ import { useRole } from '@/hooks/use-role'
 
 export default function Reserves() {
   const { role, isSuperadmin, isPropietari } = useRole()
+  
+  // Memoitzar els valors de rol per evitar re-renders
+  const isAdmin = isSuperadmin()
+  const isOwner = isPropietari()
+  
   const [reserves, setReserves] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -43,13 +48,27 @@ export default function Reserves() {
       setLoading(true)
       const params = {
         page: currentPage,
-        search: searchTerm,
-        estat: statusFilter === 'all' ? '' : statusFilter,
-        estat_pagament: estatPagamentFilter === 'all' ? '' : estatPagamentFilter,
-        plataforma: plataformaFilter === 'all' ? '' : plataformaFilter,
-        data_inici: dataInici,
-        data_fi: dataFi,
         per_page: 20
+      }
+
+      // Només afegir paràmetres si tenen valors
+      if (searchTerm.trim()) {
+        params.search = searchTerm.trim()
+      }
+      if (statusFilter && statusFilter !== 'all') {
+        params.estat = statusFilter
+      }
+      if (estatPagamentFilter && estatPagamentFilter !== 'all') {
+        params.estat_pagament = estatPagamentFilter
+      }
+      if (plataformaFilter && plataformaFilter !== 'all') {
+        params.plataforma = plataformaFilter
+      }
+      if (dataInici) {
+        params.data_inici = dataInici
+      }
+      if (dataFi) {
+        params.data_fi = dataFi
       }
 
       console.log('Cridant API amb params:', params)

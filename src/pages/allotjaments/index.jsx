@@ -59,6 +59,9 @@ export default function AllotjamentsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const { success, error } = useToast()
   const { isSuperadmin } = useRole()
+  
+  // Memoitzar el resultat de isSuperadmin per evitar re-renders
+  const isAdmin = isSuperadmin()
 
   const tipusAllotjament = [
     { value: 'apartament', label: 'Apartament' },
@@ -81,7 +84,7 @@ export default function AllotjamentsPage() {
       }
       
       // Només afegir filtre de propietari si és superadmin
-      if (isSuperadmin() && filterPropietari !== 'all') {
+      if (isAdmin && filterPropietari !== 'all') {
         params.propietari_id = filterPropietari
       }
       
@@ -105,7 +108,7 @@ export default function AllotjamentsPage() {
 
   const carregarPropietaris = async () => {
     // Només carregar propietaris si és superadmin
-    if (!isSuperadmin()) {
+    if (!isAdmin) {
       return
     }
     
@@ -141,11 +144,11 @@ export default function AllotjamentsPage() {
 
   useEffect(() => {
     carregarPropietaris()
-  }, [isSuperadmin])
+  }, [isAdmin])
 
   useEffect(() => {
     carregarAllotjaments()
-  }, [searchTerm, filterEstat, filterTipus, ...(isSuperadmin() ? [filterPropietari] : [])])
+  }, [searchTerm, filterEstat, filterTipus, isAdmin, filterPropietari])
 
   const getEstatBadge = (estat) => {
     switch (estat) {
