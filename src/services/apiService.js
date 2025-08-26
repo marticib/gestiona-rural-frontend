@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const HUB_API_URL = import.meta.env.VITE_HUB_API_URL || 'http://localhost:8000/api'
-const LOCAL_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
+const LOCAL_API_URL = import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:8001/api'
 
 // Configurar interceptors per axios
 const createApiClient = (baseURL) => {
@@ -24,13 +24,19 @@ const createApiClient = (baseURL) => {
     (response) => response,
     (error) => {
       if (error.response?.status === 401) {
-        // Token expirat o no vàlid, redirigir al hub
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('user')
+        // Només redirigir si és una crida crítica (auth/user) o si no hi ha token
+        const isAuthCheck = error.config?.url?.includes('/auth/user')
+        const hasToken = localStorage.getItem('auth_token')
         
-        const HUB_URL = import.meta.env.VITE_HUB_URL || 'http://localhost:3000'
-        const returnUrl = encodeURIComponent(window.location.origin)
-        window.location.href = `${HUB_URL}/login?return_url=${returnUrl}&app=gestiona-rural`
+        if (isAuthCheck || !hasToken) {
+          // Token expirat o no vàlid, redirigir al hub
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('user')
+          
+          const HUB_URL = import.meta.env.VITE_HUB_APP_URL || 'http://localhost:3000'
+          const returnUrl = encodeURIComponent(window.location.origin)
+          window.location.href = `${HUB_URL}/login?return_url=${returnUrl}&app=gestiona-rural`
+        }
       }
       return Promise.reject(error)
     }

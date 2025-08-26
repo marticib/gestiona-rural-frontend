@@ -63,25 +63,45 @@ export function AuthProvider({ children }) {
       
       if (savedToken && savedUser) {
         try {
-          // Verificar si el token és vàlid consultant el Hub API
-          const response = await hubApi.get('/auth/user')
+          // Construir la URL correctament
+          const hubApiUrl = import.meta.env.VITE_HUB_API_URL
+          const userEndpoint = hubApiUrl.includes('index.php') 
+            ? `${hubApiUrl}/auth/user`
+            : `${hubApiUrl}/auth/user`
           
-          if (response.status === 200) {
+          console.log('Rural Auth - Validating token with URL:', userEndpoint)
+          
+          // Verificar si el token és vàlid consultant el Hub API
+          // Utilitzem fetch directe per evitar l'interceptor que redirigeix automàticament
+          const response = await fetch(userEndpoint, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${savedToken}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          })
+          
+          console.log('Rural Auth - Response status:', response.status)
+          
+          if (response.ok) {
+            const data = await response.json()
             // Token vàlid, restaurar l'estat
-            console.log('Rural Auth - Token valid, user:', response.data);
-            console.log('Rural Auth - Full response structure:', JSON.stringify(response.data, null, 2));
-            console.log('Rural Auth - User application_roles:', response.data.user?.application_roles);
+            console.log('Rural Auth - Token valid, user:', data);
+            console.log('Rural Auth - Full response structure:', JSON.stringify(data, null, 2));
+            console.log('Rural Auth - User application_roles:', data.user?.application_roles);
             setToken(savedToken)
-            setValidatedUser(response.data.user)
+            setValidatedUser(data.user)
           } else {
             // Token invàlid, netejar localStorage
+            console.log('Rural Auth - Token invalid, response status:', response.status)
             localStorage.removeItem("auth_token")
             localStorage.removeItem("user")
             console.log("Token expirat o invàlid, sessió netejada")
           }
         } catch (error) {
           // Error de connexió o parsing, netejar localStorage
-          console.error("Error validant token:", error)
+          console.error("Rural Auth - Error validant token:", error)
           localStorage.removeItem("auth_token")
           localStorage.removeItem("user")
         }

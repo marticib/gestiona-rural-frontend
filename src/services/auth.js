@@ -29,7 +29,7 @@ class AuthService {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
     // Redirect to Hub for logout
-    window.location.href = `${import.meta.env.VITE_HUB_URL}/logout`
+    window.location.href = `${import.meta.env.VITE_HUB_APP_URL}/logout`
   }
 
   async validateToken() {
@@ -58,7 +58,7 @@ class AuthService {
     
     if (!token) {
       // Redirect to Hub for authentication
-      window.location.href = `${import.meta.env.VITE_HUB_URL}/login`
+      window.location.href = `${import.meta.env.VITE_HUB_APP_URL}/login`
       throw new Error('No authentication token available')
     }
 

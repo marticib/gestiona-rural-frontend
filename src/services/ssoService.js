@@ -1,8 +1,8 @@
 import axios from 'axios'
 
 const HUB_API_URL = import.meta.env.VITE_HUB_API_URL || 'http://localhost:8000/api'
-const HUB_URL = import.meta.env.VITE_HUB_URL || 'http://localhost:3000'
-const LOCAL_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
+const HUB_URL = import.meta.env.VITE_HUB_APP_URL || 'http://localhost:3000'
+const LOCAL_API_URL = import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:8001/api'
 
 const ssoService = {
   // Verificar token SSO amb Gestiona Hub
