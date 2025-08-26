@@ -1,5 +1,5 @@
-const API_BASE_URL = 'http://localhost:8000/api'; // Rural API
-const HUB_API_BASE_URL = 'http://localhost:8000/api'; // Hub API per autenticació
+const API_BASE_URL = import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:8001/api'; // Rural API
+const HUB_API_BASE_URL = import.meta.env.VITE_HUB_API_URL || 'http://localhost:8000/api'; // Hub API per autenticació
 
 class AuthService {
     constructor() {
