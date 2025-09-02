@@ -17,6 +17,8 @@ import ReservesPage from "@/pages/reserves/index.jsx"
 import HomePage from "@/pages/home/index.jsx"
 import RegisterPage from "@/pages/register/index.jsx"
 import { LoginPage } from "@/pages/login"
+import ViatgersPage from "@/pages/ViatgersPage"
+import FormulariViatgerPage from "@/pages/FormulariViatgerPage"
 
 // Component per a pàgines que encara no estan implementades
 function ComingSoon({ title }) {
@@ -262,6 +264,14 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      {
+        path: "viatgers",
+        element: (
+          <RoleGuard allowedRoles={['superadmin', 'propietari']}>
+            <ViatgersPage />
+          </RoleGuard>
+        ),
+      },
       // Rutes de documents i eines
       {
         path: "database",
@@ -313,5 +323,15 @@ export const router = createBrowserRouter([
         ),
       },
     ],
+  },
+  // Formulari públic de viatgers (sense autenticació)
+  {
+    path: "/formulari-viatger/:token",
+    element: <FormulariViatgerPage />,
+  },
+  // Formulari públic de reserva (nou sistema)
+  {
+    path: "/formulari/:token",
+    element: <FormulariViatgerPage />,
   },
 ])

@@ -130,6 +130,25 @@ class ReservesApiService {
       throw error
     }
   }
+
+  async getSelectOptions(params = {}) {
+    try {
+      const response = await localApi.get('/reserves', { 
+        params: { 
+          ...params, 
+          per_page: 100, // Obtenir més reserves per al selector
+          sort: 'data_entrada',
+          order: 'desc'
+        } 
+      })
+      
+      return response.data?.data || []
+    } catch (error) {
+      console.error('Error in getSelectOptions:', error)
+      throw error
+    }
+  }
 }
 
 export const ReservesService = new ReservesApiService()
+export default ReservesService

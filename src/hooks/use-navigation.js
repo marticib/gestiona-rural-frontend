@@ -5,6 +5,7 @@ import {
   IconBuilding,
   IconCalendar,
   IconHome,
+  IconUsersGroup,
 } from "@tabler/icons-react"
 
 export function useNavigation() {
@@ -101,6 +102,17 @@ export function useNavigation() {
         {
           title: "Històric",
           url: "/app/reserves/historic",
+        },
+      ],
+    },
+    {
+      title: "Viatgers",
+      url: "/app/viatgers",
+      icon: IconUsersGroup,
+      items: [
+        {
+          title: "Tots els Viatgers",
+          url: "/app/viatgers",
         },
       ],
     },

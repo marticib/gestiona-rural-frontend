@@ -11,6 +11,7 @@ import {
   IconUsers,
   IconBuilding,
   IconCalendar,
+  IconUsersGroup,
   type Icon,
 } from "@tabler/icons-react"
 
@@ -127,6 +128,17 @@ export const navMain: NavItem[] = [
       {
         title: "Reserves Pendents",
         url: "/reserves/pendents",
+      },
+    ],
+  },
+  {
+    title: "Viatgers",
+    url: "/app/viatgers",
+    icon: IconUsersGroup,
+    items: [
+      {
+        title: "Tots els Viatgers",
+        url: "/app/viatgers",
       },
     ],
   },
