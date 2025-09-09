@@ -6,10 +6,7 @@ import {
   IconCurrencyEuro, 
   IconHome,
   IconUser,
-  IconFileText,
-  IconPlus,
-  IconChevronDown,
-  IconChevronUp
+  IconFileText
 } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,24 +26,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { useToast } from '@/hooks/use-toast'
 import { ReservesService } from '@/services/reserves'
 import { ClientsService } from '@/services/clients'
 import { AllotjamentsService } from '@/services/allotjaments'
 
-export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
+export function EditReservaModal({ open, onOpenChange, reserva, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [clients, setClients] = useState([])
   const [allotjaments, setAllotjaments] = useState([])
   const [preuCalculat, setPreuCalculat] = useState(0)
   const [nitsCalculades, setNitsCalculades] = useState(0)
-  const [nouClientOpen, setNouClientOpen] = useState(false)
-  const [creantClient, setCreantClient] = useState(false)
   const { success, error } = useToast()
 
   // Configuració de react-hook-form
@@ -78,22 +68,6 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
     }
   })
 
-  // Form per crear nou client
-  const {
-    register: registerClient,
-    handleSubmit: handleSubmitClient,
-    reset: resetClient,
-    formState: { errors: errorsClient }
-  } = useForm({
-    defaultValues: {
-      nom: '',
-      cognoms: '',
-      email: '',
-      telefon: '',
-      dni: ''
-    }
-  })
-
   const estats = [
     { value: 'pendent_pagament', label: 'Pendent de pagament' },
     { value: 'confirmada', label: 'Confirmada' },
@@ -117,15 +91,19 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
   const allotjamentId = watch('allotjament_id')
 
   useEffect(() => {
-    if (open) {
+    if (open && reserva) {
       carregarClients()
       carregarAllotjaments()
-      reset()
       clearErrors()
-      setPreuCalculat(0)
-      setNitsCalculades(0)
     }
-  }, [open, reset, clearErrors])
+  }, [open, reserva])
+
+  // Carregar dades de la reserva després de tenir clients i allotjaments
+  useEffect(() => {
+    if (open && reserva && clients.length > 0 && allotjaments.length > 0) {
+      carregarDadesReserva()
+    }
+  }, [open, reserva, clients, allotjaments])
 
   // Calcular automàticament nits i preu total
   useEffect(() => {
@@ -156,6 +134,54 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
     }
   }, [allotjamentId, allotjaments, setValue])
 
+  const carregarDadesReserva = () => {
+    if (!reserva) return
+
+    console.log('Carregant dades de reserva:', reserva)
+
+    // Convertir dates al format YYYY-MM-DD per als inputs
+    const formatDate = (dateString) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toISOString().split('T')[0]
+    }
+
+    const dadesFormulari = {
+      client_id: reserva.client_id?.toString() || '',
+      allotjament_id: reserva.allotjament_id?.toString() || '',
+      data_entrada: formatDate(reserva.data_entrada),
+      data_sortida: formatDate(reserva.data_sortida),
+      persones: reserva.nombre_hostes || 1,
+      preu_per_nit: reserva.preu_per_nit || '',
+      preu_total: reserva.preu_total || reserva.total || '',
+      nits: reserva.nits || '',
+      estat: reserva.estat || 'pendent_pagament',
+      metode_pagament: reserva.metode_pagament || 'targeta_credit',
+      pagat: reserva.pagat || false,
+      notes_client: reserva.notes_client || '',
+      notes_internes: reserva.notes_internes || ''
+    }
+
+    console.log('Dades a carregar al formulari:', dadesFormulari)
+
+    reset(dadesFormulari)
+
+    // Calcular nits i preu inicial
+    if (reserva.data_entrada && reserva.data_sortida) {
+      const entrada = new Date(reserva.data_entrada)
+      const sortida = new Date(reserva.data_sortida)
+      if (sortida > entrada) {
+        const diferenciaTempo = sortida.getTime() - entrada.getTime()
+        const nits = Math.ceil(diferenciaTempo / (1000 * 3600 * 24))
+        setNitsCalculades(nits)
+      }
+    }
+
+    if (reserva.preu_total || reserva.total) {
+      setPreuCalculat(parseFloat(reserva.preu_total || reserva.total))
+    }
+  }
+
   const carregarClients = async () => {
     try {
       const response = await ClientsService.getAll({ estat: 'actiu' })
@@ -178,32 +204,6 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
     }
   }
 
-  const crearNouClient = async (dataClient) => {
-    setCreantClient(true)
-    
-    try {
-      const response = await ClientsService.create(dataClient)
-      
-      if (response.success) {
-        success('Client creat correctament')
-        // Afegir el nou client a la llista
-        setClients(prev => [...prev, response.data])
-        // Seleccionar automàticament el nou client
-        setValue('client_id', response.data.id.toString())
-        // Tancar el collapse i resetar el form
-        setNouClientOpen(false)
-        resetClient()
-      } else {
-        error(response.message || 'Error en crear el client')
-      }
-    } catch (err) {
-      console.error('Error creant client:', err)
-      error('Error en crear el client')
-    } finally {
-      setCreantClient(false)
-    }
-  }
-
   const onSubmit = async (data) => {
     setLoading(true)
     clearErrors()
@@ -211,17 +211,6 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
     // Validació de dates
     const entrada = new Date(data.data_entrada)
     const sortida = new Date(data.data_sortida)
-    const avui = new Date()
-    avui.setHours(0, 0, 0, 0)
-
-    if (entrada < avui) {
-      setError('data_entrada', {
-        type: 'manual',
-        message: 'La data d\'entrada no pot ser anterior a avui'
-      })
-      setLoading(false)
-      return
-    }
 
     if (sortida <= entrada) {
       setError('data_sortida', {
@@ -259,10 +248,10 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
       animals_domestics: false
     }
 
-    const response = await ReservesService.create(dataToSend)
+    const response = await ReservesService.update(reserva.id, dataToSend)
     
     if (response.success) {
-      success('Reserva creada correctament')
+      success('Reserva actualitzada correctament')
       onSuccess()
       onOpenChange(false)
       reset()
@@ -280,7 +269,7 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
         
         error('Hi ha errors en el formulari. Revisa els camps marcats.')
       } else {
-        error(response.message || 'Error en crear la reserva')
+        error(response.message || 'Error en actualitzar la reserva')
       }
     }
     
@@ -289,11 +278,9 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
 
   const handleClose = () => {
     reset()
-    resetClient()
     clearErrors()
     setPreuCalculat(0)
     setNitsCalculades(0)
-    setNouClientOpen(false)
     onOpenChange(false)
   }
 
@@ -307,16 +294,18 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
     )
   }
 
+  if (!reserva) return null
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <IconCalendar className="h-5 w-5" />
-            Nova Reserva
+            <IconFileText className="h-5 w-5" />
+            Editar Reserva #{reserva.codi_reserva}
           </DialogTitle>
           <DialogDescription>
-            Crea una nova reserva al sistema. Els camps marcats amb * són obligatoris.
+            Modifica les dades de la reserva. Els camps marcats amb * són obligatoris.
           </DialogDescription>
         </DialogHeader>
 
@@ -329,150 +318,29 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
               <div className="space-y-2">
                 <Label htmlFor="client_id">Client *</Label>
                 
-                <div className="flex gap-2">
-                  <Controller
-                    name="client_id"
-                    control={control}
-                    rules={{ required: 'Cal seleccionar un client' }}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger className={`flex-1 ${errors.client_id ? 'border-red-500' : ''}`}>
-                          <SelectValue placeholder="Selecciona un client" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {clients.map((client) => (
-                            <SelectItem key={client.id} value={client.id.toString()}>
-                              <div className="flex items-center gap-2">
-                                <IconUser className="h-4 w-4" />
-                                {client.nom} {client.cognoms}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setNouClientOpen(!nouClientOpen)}
-                    className="px-3 h-10"
-                  >
-                    <IconPlus className="h-4 w-4" />
-                    {nouClientOpen ? (
-                      <IconChevronUp className="h-3 w-3 ml-1" />
-                    ) : (
-                      <IconChevronDown className="h-3 w-3 ml-1" />
-                    )}
-                  </Button>
-                </div>
-                
+                <Controller
+                  name="client_id"
+                  control={control}
+                  rules={{ required: 'Cal seleccionar un client' }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className={`${errors.client_id ? 'border-red-500' : ''}`}>
+                        <SelectValue placeholder="Selecciona un client" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              <IconUser className="h-4 w-4" />
+                              {client.nom} {client.cognoms}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 <FieldError error={errors.client_id} />
-
-                {/* Collapse per crear nou client */}
-                <Collapsible open={nouClientOpen} onOpenChange={setNouClientOpen}>
-                  <CollapsibleContent className="space-y-4 mt-4 p-4 border rounded-lg bg-muted/50">
-                    <h4 className="font-medium text-sm">Crear nou client</h4>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label htmlFor="client_nom" className="text-xs">Nom *</Label>
-                        <Input
-                          id="client_nom"
-                          {...registerClient('nom', { 
-                            required: 'El nom és obligatori' 
-                          })}
-                          placeholder="Nom"
-                          className={`text-sm ${errorsClient.nom ? 'border-red-500' : ''}`}
-                        />
-                        {errorsClient.nom && (
-                          <div className="text-xs text-red-500">{errorsClient.nom.message}</div>
-                        )}
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor="client_cognoms" className="text-xs">Cognoms *</Label>
-                        <Input
-                          id="client_cognoms"
-                          {...registerClient('cognoms', { 
-                            required: 'Els cognoms són obligatoris' 
-                          })}
-                          placeholder="Cognoms"
-                          className={`text-sm ${errorsClient.cognoms ? 'border-red-500' : ''}`}
-                        />
-                        {errorsClient.cognoms && (
-                          <div className="text-xs text-red-500">{errorsClient.cognoms.message}</div>
-                        )}
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor="client_email" className="text-xs">Email *</Label>
-                        <Input
-                          id="client_email"
-                          type="email"
-                          {...registerClient('email', { 
-                            required: 'L\'email és obligatori',
-                            pattern: {
-                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                              message: 'Format d\'email invàlid'
-                            }
-                          })}
-                          placeholder="email@exemple.com"
-                          className={`text-sm ${errorsClient.email ? 'border-red-500' : ''}`}
-                        />
-                        {errorsClient.email && (
-                          <div className="text-xs text-red-500">{errorsClient.email.message}</div>
-                        )}
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor="client_telefon" className="text-xs">Telèfon</Label>
-                        <Input
-                          id="client_telefon"
-                          type="tel"
-                          {...registerClient('telefon')}
-                          placeholder="123456789"
-                          className="text-sm"
-                        />
-                      </div>
-
-                      <div className="space-y-1 col-span-2">
-                        <Label htmlFor="client_dni" className="text-xs">DNI/NIE</Label>
-                        <Input
-                          id="client_dni"
-                          {...registerClient('dni')}
-                          placeholder="12345678A"
-                          className="text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleSubmitClient(crearNouClient)}
-                        disabled={creantClient}
-                        className="flex-1"
-                      >
-                        {creantClient ? 'Creant...' : 'Crear Client'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setNouClientOpen(false)
-                          resetClient()
-                        }}
-                      >
-                        Cancel·lar
-                      </Button>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
               </div>
 
               <div className="space-y-2">
@@ -719,7 +587,7 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Creant...' : 'Crear Reserva'}
+              {loading ? 'Actualitzant...' : 'Actualitzar Reserva'}
             </Button>
           </div>
         </form>

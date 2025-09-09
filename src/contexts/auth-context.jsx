@@ -165,6 +165,28 @@ export function AuthProvider({ children }) {
     logout,
     isLoading,
     isAuthenticated: !!user,
+    // Funció per comprovar si l'usuari té un rol específic
+    hasRole: (roleName) => {
+      if (!user?.application_roles) return false
+      return user.application_roles.some(appRole => 
+        appRole.role?.slug === roleName || appRole.role?.name === roleName
+      )
+    },
+    // Funció per comprovar si l'usuari té un permís específic
+    hasPermission: (permission) => {
+      if (!user?.application_roles) return false
+      return user.application_roles.some(appRole => 
+        appRole.role?.permissions?.includes(permission)
+      )
+    },
+    // Funció per obtenir el rol principal de l'aplicació rural
+    getRuralRole: () => {
+      if (!user?.application_roles) return null
+      const ruralRole = user.application_roles.find(appRole => 
+        appRole.application?.slug === 'rural'
+      )
+      return ruralRole?.role || null
+    }
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

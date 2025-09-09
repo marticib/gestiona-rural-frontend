@@ -6,7 +6,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
-  Sparkles,
+  ArrowLeft,
 } from "lucide-react"
 
 import {
@@ -41,6 +41,13 @@ export function NavUser() {
 
   const handleLogout = () => {
     logout()
+  }
+
+  const handleBackToHub = () => {
+    // Detectar si estem en local o producció
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const hubUrl = isLocal ? 'http://localhost:3000/app' : 'https://gestiona.cat/app'
+    window.open(hubUrl, '_blank')
   }
 
   return (
@@ -85,9 +92,9 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
+              <DropdownMenuItem onClick={handleBackToHub}>
+                <ArrowLeft />
+                Tornar al Hub
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

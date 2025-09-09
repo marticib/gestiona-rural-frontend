@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Calendar, Filter, CheckCircle, XCircle, Clock, CreditCard, LogIn, LogOut, User, Building2, Mail, Phone, Users } from 'lucide-react'
+import { Plus, Search, Calendar, Filter, CheckCircle, XCircle, Clock, CreditCard, LogIn, LogOut, User, Building2, Mail, Phone, Users, Edit, FileUser } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Badge } from '../../components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../../components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -15,6 +21,7 @@ import {
 import { ReservesService } from '../../services/reserves'
 import { useToast } from '@/hooks/use-toast'
 import { NovaReservaModal } from '../../components/reserves/nova-reserva-modal'
+import { EditReservaModal } from '../../components/reserves/edit-reserva-modal'
 import { useRole } from '@/hooks/use-role'
 
 export default function Reserves() {
@@ -36,6 +43,8 @@ export default function Reserves() {
   const [pagination, setPagination] = useState(null)
   const [actionLoading, setActionLoading] = useState({})
   const [showNovaModal, setShowNovaModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [reservaToEdit, setReservaToEdit] = useState(null)
   
   const { success, error } = useToast()
 
@@ -200,8 +209,58 @@ export default function Reserves() {
     setCurrentPage(1)
   }
 
+  const handleEditReserva = (reserva) => {
+    setReservaToEdit(reserva)
+    setShowEditModal(true)
+  }
+
+  const handleEditSuccess = () => {
+    setShowEditModal(false)
+    setReservaToEdit(null)
+    loadReserves()
+  }
+
+  const handleGenerarFormulariViatgers = async (reserva) => {
+    let token = reserva.formulari_reserva?.token_formulari
+    let url = null
+    
+    if (!token) {
+      // Si no existeix token, crear un nou formulari
+      try {
+        const response = await ReservesService.generarFormulariViatgers(reserva.id)
+        if (response.success && response.data) {
+          token = response.data.formulari.token_formulari
+          url = response.data.link
+        } else {
+          error('Error en generar el formulari de viatgers')
+          return
+        }
+      } catch (err) {
+        console.error('Error generant formulari:', err)
+        error('Error en generar el formulari de viatgers')
+        return
+      }
+    } else {
+      // Si ja existeix token, construir l'URL
+      url = `${window.location.origin}/formulari/${token}`
+    }
+    
+    // Copiar l'enllaç al portapapers
+    navigator.clipboard.writeText(url).then(() => {
+      success('Enllaç del formulari copiat al portapapers!')
+    }).catch(() => {
+      // Si no es pot copiar automàticament, mostrar l'enllaç
+      const message = `Enllaç del formulari de viatgers: ${url}`
+      success(message)
+    })
+    
+    // També obrir l'enllaç en una nova pestanya
+    window.open(url, '_blank')
+  }
+
   return (
-    <div className="flex flex-col gap-6 py-4 md:py-6 px-6">
+    <TooltipProvider>
+      <div className="flex flex-col gap-6 py-4 md:py-6 px-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -395,69 +454,138 @@ export default function Reserves() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      {/* Botó d'editar - sempre visible */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditReserva(reserva)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Editar reserva</p>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {/* Botó del formulari de viatgers - sempre visible */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleGenerarFormulariViatgers(reserva)}
+                            className="text-purple-600 hover:text-purple-700"
+                          >
+                            <FileUser className="h-3 w-3" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Formulari de viatgers</p>
+                        </TooltipContent>
+                      </Tooltip>
+
                       {canConfirm(reserva) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleActionClick('confirmar', reserva.id)}
-                          disabled={actionLoading[`confirmar-${reserva.id}`]}
-                          className="text-green-600 hover:text-green-700"
-                        >
-                          <CheckCircle className="h-3 w-3" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleActionClick('confirmar', reserva.id)}
+                              disabled={actionLoading[`confirmar-${reserva.id}`]}
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Confirmar reserva</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                       
                       {canCheckIn(reserva) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleActionClick('checkIn', reserva.id)}
-                          disabled={actionLoading[`checkIn-${reserva.id}`]}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          <LogIn className="h-3 w-3" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleActionClick('checkIn', reserva.id)}
+                              disabled={actionLoading[`checkIn-${reserva.id}`]}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <LogIn className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Fer check-in</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                       
                       {canCheckOut(reserva) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleActionClick('checkOut', reserva.id)}
-                          disabled={actionLoading[`checkOut-${reserva.id}`]}
-                          className="text-purple-600 hover:text-purple-700"
-                        >
-                          <LogOut className="h-3 w-3" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleActionClick('checkOut', reserva.id)}
+                              disabled={actionLoading[`checkOut-${reserva.id}`]}
+                              className="text-purple-600 hover:text-purple-700"
+                            >
+                              <LogOut className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Fer check-out</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                       
                       {canMarkPaid(reserva) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleActionClick('marcarPagada', reserva.id)}
-                          disabled={actionLoading[`marcarPagada-${reserva.id}`]}
-                          className="text-green-600 hover:text-green-700"
-                        >
-                          <CreditCard className="h-3 w-3" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleActionClick('marcarPagada', reserva.id)}
+                              disabled={actionLoading[`marcarPagada-${reserva.id}`]}
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <CreditCard className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Marcar com a pagada</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                       
                       {canCancel(reserva) && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const motiu = prompt('Motiu de la cancel·lació (opcional):')
-                            if (motiu !== null) { // L'usuari no ha cancel·lat el prompt
-                              handleActionClick('cancellar', reserva.id, motiu)
-                            }
-                          }}
-                          disabled={actionLoading[`cancellar-${reserva.id}`]}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <XCircle className="h-3 w-3" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const motiu = prompt('Motiu de la cancel·lació (opcional):')
+                                if (motiu !== null) { // L'usuari no ha cancel·lat el prompt
+                                  handleActionClick('cancellar', reserva.id, motiu)
+                                }
+                              }}
+                              disabled={actionLoading[`cancellar-${reserva.id}`]}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <XCircle className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Cancel·lar reserva</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   </TableCell>
@@ -501,6 +629,15 @@ export default function Reserves() {
         onOpenChange={setShowNovaModal}
         onSuccess={() => loadReserves()}
       />
-    </div>
+
+      {/* Modal per editar reserva */}
+      <EditReservaModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        reserva={reservaToEdit}
+        onSuccess={handleEditSuccess}
+      />
+      </div>
+    </TooltipProvider>
   )
 }

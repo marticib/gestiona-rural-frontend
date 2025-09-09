@@ -8,9 +8,13 @@ import { toast } from 'sonner'
 const MostrarLinkModal = ({ isOpen, onClose, reserva, formulariReserva }) => {
   if (!isOpen || !reserva) return null
 
-  const linkFormulari = formulariReserva?.formulari?.token_formulari 
-    ? `${window.location.origin}/formulari/${formulariReserva.formulari.token_formulari}`
-    : null
+  console.log('formulariReserva data:', formulariReserva) // Debug
+
+  // Gestionar diferents estructures de dades
+  const formulari = formulariReserva?.data?.formulari || formulariReserva?.formulari
+  const viatgers = formulariReserva?.data?.viatgers || formulariReserva?.viatgers || []
+  const linkFormulari = formulariReserva?.data?.link || 
+    (formulari?.token_formulari ? `${window.location.origin}/formulari/${formulari.token_formulari}` : null)
 
   const handleCopiarLink = async () => {
     if (!linkFormulari) {
@@ -68,7 +72,7 @@ const MostrarLinkModal = ({ isOpen, onClose, reserva, formulariReserva }) => {
                 Link del Formulari de Reserva
               </CardTitle>
               <CardDescription>
-                Reserva #{reserva.id} - {formulariReserva?.viatgers?.length || 0} viatgers
+                Reserva #{reserva.id} - {viatgers?.length || 0} viatgers
               </CardDescription>
             </div>
             <Button
@@ -100,7 +104,11 @@ const MostrarLinkModal = ({ isOpen, onClose, reserva, formulariReserva }) => {
               </div>
             ) : (
               <div className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
-                No hi ha formulari generat per aquesta reserva
+                <p>No hi ha formulari generat per aquesta reserva</p>
+                <p className="mt-2 text-xs">Debug info:</p>
+                <pre className="text-xs overflow-auto mt-1">
+                  {JSON.stringify({ formulari, viatgers, formulariReserva }, null, 2)}
+                </pre>
               </div>
             )}
           </div>

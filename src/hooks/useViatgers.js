@@ -114,7 +114,11 @@ export const useViatgers = (reservaId = null) => {
     } catch (error) {
       const message = error.response?.data?.message || 'Error generant fitxer TXT'
       setError(message)
-      toast.error(message)
+      
+      // No mostrar toast si l'error és sobre dades insuficients - el frontend ja ho gestiona amb més detall
+      if (!message.includes('No hi ha viatgers amb formularis omplerts') && !message.includes('No hi ha viatgers amb dades suficients')) {
+        toast.error(message)
+      }
       throw error
     } finally {
       setLoading(false)

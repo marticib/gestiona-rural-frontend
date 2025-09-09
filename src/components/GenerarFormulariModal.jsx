@@ -5,6 +5,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { 
   Copy, 
   ExternalLink, 
@@ -148,20 +155,21 @@ Gràcies!`
                       Carregant reserves...
                     </div>
                   ) : (
-                    <select
-                      id="reserva_id"
+                    <Select
                       value={formData.reserva_id}
-                      onChange={(e) => setFormData(prev => ({ ...prev, reserva_id: e.target.value }))}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                      required
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, reserva_id: value }))}
                     >
-                      <option value="">Selecciona una reserva</option>
-                      {reserves.map((reserva) => (
-                        <option key={reserva.id} value={reserva.id}>
-                          {formatReservaLabel(reserva)}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una reserva" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {reserves.map((reserva) => (
+                          <SelectItem key={reserva.id} value={reserva.id.toString()}>
+                            {formatReservaLabel(reserva)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
               )}
@@ -224,9 +232,6 @@ Gràcies!`
                     <div key={viatger.id} className="flex items-center gap-2 text-sm">
                       <Badge variant="outline">{index + 1}</Badge>
                       {viatger.nom || `Viatger ${index + 1}`}
-                      {viatger.es_responsable && (
-                        <Badge variant="secondary" className="text-xs">Responsable</Badge>
-                      )}
                       <Badge variant={viatger.estat_formulari === 'omplert' ? 'default' : 'secondary'}>
                         {viatger.estat_formulari === 'omplert' ? 'Completat' : 'Pendent'}
                       </Badge>

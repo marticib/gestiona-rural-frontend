@@ -72,10 +72,6 @@ class ViatgersApiService {
       return response.data
     } catch (error) {
       console.error('Error in getFormulariReserva:', error)
-      // Si no existeix, retornem null en lloc de llançar error
-      if (error.response?.status === 404) {
-        return null
-      }
       throw error
     }
   }
@@ -184,6 +180,32 @@ class ViatgersApiService {
       return response.data
     } catch (error) {
       console.error('Error in omplirFormulariPublic:', error)
+      throw error
+    }
+  }
+
+  async validarDni(dni, viatgerId = null, reservaId = null) {
+    try {
+      const response = await localApi.post('/validar-dni', {
+        dni,
+        viatger_id: viatgerId,
+        reserva_id: reservaId
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error in validarDni:', error)
+      throw error
+    }
+  }
+
+  async updateGuestCountPublic(token, guestCount) {
+    try {
+      const response = await localApi.patch(`/formulari/${token}/guest-count`, {
+        nombre_hostes: guestCount
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error in updateGuestCountPublic:', error)
       throw error
     }
   }

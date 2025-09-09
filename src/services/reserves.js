@@ -148,6 +148,30 @@ class ReservesApiService {
       throw error
     }
   }
+
+  async updateGuestCount(id, guestCount) {
+    try {
+      const response = await localApi.patch(`/reserves/${id}/guest-count`, {
+        nombre_hostes: guestCount
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error in updateGuestCount:', error)
+      throw error
+    }
+  }
+
+  async generarFormulariViatgers(id) {
+    try {
+      const response = await localApi.post(`/viatgers/generar-formulari-reserva`, {
+        reserva_id: id
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error in generarFormulariViatgers:', error)
+      throw error
+    }
+  }
 }
 
 export const ReservesService = new ReservesApiService()

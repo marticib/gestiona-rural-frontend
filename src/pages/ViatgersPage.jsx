@@ -1,8 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { 
   Users, 
   Plus, 
@@ -17,29 +24,33 @@ import {
   Copy,
   Trash2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Calendar
 } from 'lucide-react'
 import { useViatgers } from '@/hooks/useViatgers'
 import GenerarFormulariModal from '@/components/GenerarFormulariModal'
 import MostrarLinkModal from '@/components/MostrarLinkModal'
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal'
 import ViatgersService from '@/services/viatgers'
+import ReservesService from '@/services/reserves'
 import { toast } from 'sonner'
 
 const ViatgersPage = () => {
   const {
     viatgers,
     loading,
-    estadistiques,
     carregarViatgers,
     generarTxtMossos,
     descarregarTxt
   } = useViatgers()
 
+  const [reserves, setReserves] = useState([])
+  const [loadingReserves, setLoadingReserves] = useState(false)
+
   const [filtres, setFiltres] = useState({
     cerca: '',
-    estat: '',
-    reserva_id: ''
+    estat: 'tots',
+    reserva_id: 'totes'
   })
 
   const [mostrarFormulari, setMostrarFormulari] = useState(false)
@@ -55,6 +66,36 @@ const ViatgersPage = () => {
   
   // Estats per al collapse dels viatgers
   const [reservesCollapsed, setReservesCollapsed] = useState({})
+  
+  // Estats per al collapse dels mesos
+  const [mesosCollapsed, setMesosCollapsed] = useState(() => {
+    // Obtenir el mes actual en format YYYY-MM
+    const avui = new Date()
+    const mesActual = `${avui.getFullYear()}-${String(avui.getMonth() + 1).padStart(2, '0')}`
+    
+    // Inicialitzar amb tots els mesos tancats excepte l'actual
+    const initialState = {}
+    // Retornem l'estat inicial buit, després s'actualitzarà quan tinguem les dades
+    return initialState
+  })
+
+  // Carregar reserves per al select
+  useEffect(() => {
+    const carregarReserves = async () => {
+      try {
+        setLoadingReserves(true)
+        const response = await ReservesService.getAll({ per_page: 100 }) // Carregar moltes reserves
+        setReserves(response.data || [])
+      } catch (error) {
+        console.error('Error carregant reserves:', error)
+        toast.error('Error carregant reserves')
+      } finally {
+        setLoadingReserves(false)
+      }
+    }
+
+    carregarReserves()
+  }, [])
 
   // Aplicar filtres
   const viatgersFiltrats = viatgers.filter(viatger => {
@@ -63,46 +104,153 @@ const ViatgersPage = () => {
       viatger.cognoms?.toLowerCase().includes(filtres.cerca.toLowerCase()) ||
       viatger.dni?.toLowerCase().includes(filtres.cerca.toLowerCase())
     
-    const estatMatch = !filtres.estat || viatger.estat_formulari === filtres.estat
-    const reservaMatch = !filtres.reserva_id || viatger.reserva_id.toString() === filtres.reserva_id
+    const estatMatch = filtres.estat === 'tots' || viatger.estat_formulari === filtres.estat
+    const reservaMatch = filtres.reserva_id === 'totes' || viatger.reserva_id.toString() === filtres.reserva_id
 
     return cercaMatch && estatMatch && reservaMatch
   })
 
-  // Agrupar viatgers per reserva
-  const viatgersPerReserva = viatgersFiltrats.reduce((acc, viatger) => {
-    const reservaId = viatger.reserva_id
-    if (!acc[reservaId]) {
-      acc[reservaId] = {
-        reserva_id: reservaId,
-        viatgers: [],
-        reserva: viatger.reserva // Assumint que el viatger té la relació reserva carregada
+  // Agrupar viatgers per mes (basant-se en la data d'entrada de la reserva)
+  const viatgersPerMes = viatgersFiltrats.reduce((acc, viatger) => {
+    const dataEntrada = new Date(viatger.data_entrada || viatger.reserva?.data_entrada)
+    const mesAny = `${dataEntrada.getFullYear()}-${String(dataEntrada.getMonth() + 1).padStart(2, '0')}`
+    const nomMes = dataEntrada.toLocaleDateString('ca-ES', { year: 'numeric', month: 'long' })
+    
+    if (!acc[mesAny]) {
+      acc[mesAny] = {
+        mes: mesAny,
+        nomMes: nomMes,
+        reserves: {}
       }
     }
-    acc[reservaId].viatgers.push(viatger)
+
+    const reservaId = viatger.reserva_id
+    if (!acc[mesAny].reserves[reservaId]) {
+      acc[mesAny].reserves[reservaId] = {
+        reserva_id: reservaId,
+        viatgers: [],
+        reserva: viatger.reserva
+      }
+    }
+    
+    acc[mesAny].reserves[reservaId].viatgers.push(viatger)
     return acc
   }, {})
 
+  // Ordenar mesos per data (més recent primer)
+  const mesosOrdenats = Object.values(viatgersPerMes).sort((a, b) => b.mes.localeCompare(a.mes))
+
+  // Inicialitzar l'estat dels mesos quan canvien els viatgers
+  useEffect(() => {
+    if (mesosOrdenats.length > 0) {
+      const mesRecent = mesosOrdenats[0]?.mes // El primer mes de la llista ordenada (el més recent)
+      
+      const initialCollapsedState = {}
+      mesosOrdenats.forEach(mesData => {
+        // Només l'últim mes (el més recent) estarà obert (false = obert, true = tancat)
+        initialCollapsedState[mesData.mes] = mesData.mes !== mesRecent
+      })
+      
+      // Només actualitzar si l'estat ha canviat per evitar loops infinits
+      setMesosCollapsed(prev => {
+        const keys = Object.keys(initialCollapsedState)
+        const hasChanged = keys.length !== Object.keys(prev).length || 
+          keys.some(mes => prev[mes] !== initialCollapsedState[mes])
+        return hasChanged ? initialCollapsedState : prev
+      })
+    }
+  }, [viatgers, filtres])
+
+  // Inicialitzar l'estat dels collapse de reserves (totes tancades per defecte)
+  useEffect(() => {
+    const allReservaIds = mesosOrdenats.flatMap(mesData => 
+      Object.keys(mesData.reserves).map(reservaId => parseInt(reservaId))
+    )
+    
+    if (allReservaIds.length > 0) {
+      const initialReservesCollapsedState = {}
+      allReservaIds.forEach(reservaId => {
+        // Totes les reserves tancades per defecte (true = tancat)
+        initialReservesCollapsedState[reservaId] = true
+      })
+      
+      // Només actualitzar si l'estat ha canviat
+      setReservesCollapsed(prev => {
+        const keys = Object.keys(initialReservesCollapsedState)
+        const hasChanged = keys.length !== Object.keys(prev).length || 
+          keys.some(reservaId => prev[reservaId] !== initialReservesCollapsedState[reservaId])
+        return hasChanged ? initialReservesCollapsedState : prev
+      })
+    }
+  }, [viatgers, filtres])
+
   const handleGenerarTxt = async (reservaId) => {
     try {
+      console.log('Generant TXT per a la reserva:', reservaId) // Debug
+      
+      // Primer, obtenir informació dels viatgers d'aquesta reserva per debug
+      const viatgersReserva = viatgersFiltrats.filter(v => v.reserva_id === reservaId)
+      console.log('Viatgers de la reserva:', viatgersReserva) // Debug
+      console.log('Estats dels viatgers:', viatgersReserva.map(v => ({ 
+        id: v.id, 
+        nom: v.nom, 
+        estat: v.estat_formulari 
+      }))) // Debug
+      
       const response = await generarTxtMossos(reservaId)
-      if (response.file_name) {
-        await descarregarTxt(response.file_name)
+      console.log('Resposta del backend:', response) // Debug
+      
+      // El nom del fitxer pot estar a response.file_name o response.data.file_name
+      const fileName = response.file_name || response.data?.file_name
+      
+      if (fileName) {
+        try {
+          await descarregarTxt(fileName)
+          // No mostrar toast aquí - el hook ja ho gestiona
+        } catch (downloadError) {
+          console.error('Error descarregant fitxer:', downloadError) // Debug
+          toast.error('TXT generat però error en la descàrrega: ' + (downloadError.message || 'Error desconegut'))
+        }
+      } else {
+        console.error('No hi ha nom de fitxer a la resposta:', response) // Debug
+        toast.error('No s\'ha pogut generar el fitxer TXT - No hi ha nom de fitxer')
       }
     } catch (error) {
-      // Error ja gestionat al hook
+      console.error('Error generant TXT:', error) // Debug
+      const errorMessage = error?.response?.data?.message || error.message || 'Error desconegut'
+      
+      if (errorMessage.includes('No hi ha viatgers amb formularis omplerts') || errorMessage.includes('No hi ha viatgers amb dades suficients')) {
+        const viatgersReserva = viatgersFiltrats.filter(v => v.reserva_id === reservaId)
+        const viatgersOmplerts = viatgersReserva.filter(v => v.estat_formulari === 'omplert')
+        const viatgersPendents = viatgersReserva.filter(v => v.estat_formulari === 'pendent')
+        const viatgersAmbDades = viatgersReserva.filter(v => 
+          v.nom && v.cognoms && v.dni_passaport && v.data_naixement && v.nacionalitat && v.sexe
+        )
+        
+        toast.error(`No es pot generar el TXT per aquesta reserva. 
+          Viatgers totals: ${viatgersReserva.length}, 
+          Amb dades completes: ${viatgersAmbDades.length}`)
+      } else {
+        toast.error('Error generant el fitxer TXT: ' + errorMessage)
+      }
     }
   }
 
   const handleMostrarLinkReserva = async (reservaId) => {
     try {
       const formulariReserva = await ViatgersService.getFormulariReserva(reservaId)
-      const reserva = viatgersPerReserva[reservaId]?.reserva
+      // Buscar la reserva en la llista de viatgers
+      const viatgerReserva = viatgers.find(v => v.reserva_id === reservaId)
+      const reserva = viatgerReserva?.reserva
+      
+      console.log('Formulari rebut:', formulariReserva) // Debug
+      console.log('Reserva:', reserva) // Debug
       
       setReservaSeleccionada(reserva)
       setFormulariReservaSeleccionat(formulariReserva)
       setMostrarLinkModal(true)
     } catch (error) {
+      console.error('Error detallat:', error) // Debug
       if (error?.response?.status === 404) {
         toast.error('No hi ha formulari generat per aquesta reserva')
       } else {
@@ -150,6 +298,13 @@ const ViatgersPage = () => {
     }))
   }
 
+  const toggleCollapseMes = (mesId) => {
+    setMesosCollapsed(prev => ({
+      ...prev,
+      [mesId]: !prev[mesId]
+    }))
+  }
+
   const getEstatBadge = (estat) => {
     const variants = {
       'pendent': { variant: 'secondary', icon: Clock, text: 'Pendent' },
@@ -194,110 +349,57 @@ const ViatgersPage = () => {
             Nou Formulari
           </Button>
           
-          <Button 
-            variant="outline"
-            onClick={() => handleGenerarTxt()}
-            className="flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            Generar TXT Global
-          </Button>
         </div>
       </div>
 
-      {/* Estadístiques */}
-      {estadistiques && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="text-2xl font-bold">{estadistiques.total}</p>
-                </div>
-                <Users className="w-8 h-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Completats</p>
-                  <p className="text-2xl font-bold text-green-600">{estadistiques.omplerts}</p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Pendents</p>
-                  <p className="text-2xl font-bold text-yellow-600">{estadistiques.pendents}</p>
-                </div>
-                <Clock className="w-8 h-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Enviats</p>
-                  <p className="text-2xl font-bold text-blue-600">{estadistiques.enviats}</p>
-                </div>
-                <AlertCircle className="w-8 h-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Filtres */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
-            Filtres
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Cercar per nom, cognoms o DNI..."
-                value={filtres.cerca}
-                onChange={(e) => setFiltres(prev => ({ ...prev, cerca: e.target.value }))}
-                className="pl-9"
-              />
-            </div>
-
-            <select
-              value={filtres.estat}
-              onChange={(e) => setFiltres(prev => ({ ...prev, estat: e.target.value }))}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <option value="">Tots els estats</option>
-              <option value="pendent">Pendent</option>
-              <option value="omplert">Completat</option>
-              <option value="enviat">Enviat</option>
-            </select>
-
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
             <Input
-              type="number"
-              placeholder="ID Reserva"
-              value={filtres.reserva_id}
-              onChange={(e) => setFiltres(prev => ({ ...prev, reserva_id: e.target.value }))}
+              placeholder="Cercar per nom, cognoms o DNI..."
+              value={filtres.cerca}
+              onChange={(e) => setFiltres(prev => ({ ...prev, cerca: e.target.value }))}
+              className="pl-9"
             />
           </div>
-        </CardContent>
-      </Card>
+
+          <Select
+            value={filtres.estat}
+            onValueChange={(value) => setFiltres(prev => ({ ...prev, estat: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Tots els estats" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tots">Tots els estats</SelectItem>
+              <SelectItem value="pendent">Pendent</SelectItem>
+              <SelectItem value="omplert">Completat</SelectItem>
+              <SelectItem value="enviat">Enviat</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filtres.reserva_id}
+            onValueChange={(value) => setFiltres(prev => ({ ...prev, reserva_id: value }))}
+            disabled={loadingReserves}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={loadingReserves ? "Carregant reserves..." : "Totes les reserves"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="totes">Totes les reserves</SelectItem>
+              {reserves.map((reserva) => (
+                <SelectItem key={reserva.id} value={reserva.id.toString()}>
+                  #{reserva.id} - {reserva.client?.nom || 'Sense client'} 
+                  ({new Date(reserva.data_entrada).toLocaleDateString()})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Llista de viatgers */}
       <Card>
@@ -312,117 +414,166 @@ const ViatgersPage = () => {
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : Object.keys(viatgersPerReserva).length === 0 ? (
+          ) : mesosOrdenats.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No s'han trobat viatgers amb els filtres aplicats
             </div>
           ) : (
-            <div className="space-y-6">
-              {Object.values(viatgersPerReserva).map((grup) => (
-                <div key={grup.reserva_id} className="border rounded-lg p-4">
-                  {/* Capçalera de la reserva */}
-                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4 pb-4 border-b">
-                    <div className="flex items-center gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleCollapseReserva(grup.reserva_id)}
-                        className="p-1 h-8 w-8"
-                      >
-                        {reservesCollapsed[grup.reserva_id] ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronUp className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <div>
-                        <h3 className="font-semibold text-lg flex items-center gap-2">
-                          Reserva #{grup.reserva_id}
-                          <Badge variant="outline">{grup.viatgers.length} viatgers</Badge>
-                        </h3>
-                        {grup.reserva && (
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(grup.reserva.data_entrada).toLocaleDateString()} - {new Date(grup.reserva.data_sortida).toLocaleDateString()}
-                            {grup.reserva.client && ` • ${grup.reserva.client.nom}`}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleGenerarTxt(grup.reserva_id)}
-                        className="flex items-center gap-1"
-                      >
-                        <Download className="w-3 h-3" />
-                        TXT
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setReservaSeleccionada(grup.reserva_id)
-                          setMostrarModal(true)
-                        }}
-                        className="flex items-center gap-1"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Formulari
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleMostrarLinkReserva(grup.reserva_id)}
-                        className="flex items-center gap-1"
-                        title="Veure link del formulari de reserva"
-                      >
-                        <Link2 className="w-3 h-3" />
-                        Link
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEliminarFormulari(grup.reserva_id)}
-                        className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        title="Eliminar formulari i tots els viatgers"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        Eliminar
-                      </Button>
-                    </div>
+            <div className="space-y-8">
+              {mesosOrdenats.map((mesData) => (
+                <div key={mesData.mes} className="space-y-4">
+                  {/* Capçalera del mes - Clickable */}
+                  <div 
+                    className="flex items-center gap-2 pb-2 border-b border-border cursor-pointer hover:bg-muted/30 rounded-lg p-2 -m-2 transition-colors"
+                    onClick={() => toggleCollapseMes(mesData.mes)}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-1 h-6 w-6"
+                    >
+                      {mesosCollapsed[mesData.mes] ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronUp className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <Calendar className="w-5 h-5 text-primary" />
+                    <h2 className="text-xl font-semibold text-primary capitalize">
+                      {mesData.nomMes}
+                    </h2>
+                    <Badge variant="outline">
+                      {Object.values(mesData.reserves).reduce((total, reserva) => total + reserva.viatgers.length, 0)} viatgers
+                    </Badge>
                   </div>
 
-                  {/* Llista de viatgers de la reserva - Collapsible amb animació */}
+                  {/* Reserves del mes - Collapsible amb animació */}
                   <div 
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                      reservesCollapsed[grup.reserva_id] 
+                    className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                      mesosCollapsed[mesData.mes] 
                         ? 'max-h-0 opacity-0' 
-                        : 'max-h-[2000px] opacity-100'
+                        : 'max-h-[10000px] opacity-100'
                     }`}
                   >
-                    <div className="space-y-3 pt-2">
-                      {grup.viatgers.map((viatger) => (
-                        <div key={viatger.id} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-3 bg-muted/30 rounded-md transition-all duration-200 hover:bg-muted/50">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-medium">
-                                {viatger.nom} {viatger.cognoms}
-                              </h4>
-                              {getEstatBadge(viatger.estat_formulari)}
-                              {viatger.es_responsable && (
-                                <Badge variant="secondary" className="text-xs">Responsable</Badge>
-                              )}
+                    <div className="space-y-4 ml-6 pt-2">
+                      {Object.values(mesData.reserves)
+                        .sort((a, b) => {
+                          // Ordenar reserves per data d'entrada (més noves primer)
+                          const dataA = new Date(a.reserva?.data_entrada || '1970-01-01')
+                          const dataB = new Date(b.reserva?.data_entrada || '1970-01-01')
+                          return dataB - dataA
+                        })
+                        .map((grup) => (
+                        <div key={grup.reserva_id} className="rounded-lg p-4 ">
+                          {/* Capçalera de la reserva */}
+                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4 pb-4 border-b">
+                            <div className="flex items-center gap-3">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleCollapseReserva(grup.reserva_id)}
+                                className="p-1 h-8 w-8"
+                              >
+                                {reservesCollapsed[grup.reserva_id] ? (
+                                  <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                  <ChevronUp className="w-4 h-4" />
+                                )}
+                              </Button>
+                              <div>
+                                <h3 className="font-semibold text-lg flex items-center gap-2">
+                                  Reserva #{grup.reserva_id}
+                                  {grup.reserva?.allotjament && (
+                                    <span className="text-sm font-normal text-muted-foreground">
+                                      • {grup.reserva.allotjament.nom || grup.reserva.allotjament}
+                                    </span>
+                                  )}
+                                  <Badge variant="outline">{grup.viatgers.length} viatgers</Badge>
+                                </h3>
+                                {grup.reserva && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {new Date(grup.reserva.data_entrada).toLocaleDateString()} - {new Date(grup.reserva.data_sortida).toLocaleDateString()}
+                                    {grup.reserva.client && ` • ${grup.reserva.client.nom}`}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
-                              <div>DNI: {viatger.dni_passaport || 'No especificat'}</div>
-                              <div>Email: {viatger.email || 'No especificat'}</div>
-                              <div>Telèfon: {viatger.telefon || 'No especificat'}</div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleGenerarTxt(grup.reserva_id)}
+                                className="flex items-center gap-1"
+                              >
+                                <Download className="w-3 h-3" />
+                                TXT
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setReservaSeleccionada(grup.reserva_id)
+                                  setMostrarModal(true)
+                                }}
+                                className="flex items-center gap-1"
+                              >
+                                <Plus className="w-3 h-3" />
+                                Formulari
+                              </Button>
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleMostrarLinkReserva(grup.reserva_id)}
+                                className="flex items-center gap-1"
+                                title="Veure link del formulari de reserva"
+                              >
+                                <Link2 className="w-3 h-3" />
+                                Link
+                              </Button>
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEliminarFormulari(grup.reserva_id)}
+                                className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                title="Eliminar formulari i tots els viatgers"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Eliminar
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Llista de viatgers de la reserva - Collapsible amb animació */}
+                          <div 
+                            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                              reservesCollapsed[grup.reserva_id] 
+                                ? 'max-h-0 opacity-0' 
+                                : 'max-h-[2000px] opacity-100'
+                            }`}
+                          >
+                            <div className="space-y-3 pt-2">
+                              {grup.viatgers.map((viatger) => (
+                                <div key={viatger.id} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-3 bg-background rounded-md transition-all duration-200 hover:bg-muted/50">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <h4 className="font-medium">
+                                        {viatger.nom} {viatger.cognoms}
+                                      </h4>
+                                      {getEstatBadge(viatger.estat_formulari)}
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
+                                      <div>DNI: {viatger.dni_passaport || 'No especificat'}</div>
+                                      <div>Email: {viatger.email || 'No especificat'}</div>
+                                      <div>Telèfon: {viatger.telefon || 'No especificat'}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
