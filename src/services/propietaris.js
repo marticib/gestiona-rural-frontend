@@ -60,6 +60,16 @@ class PropietarisApiService {
       throw error
     }
   }
+
+  async getByEmail(email) {
+    try {
+      const response = await localApi.get(`/propietaris/by-email/${encodeURIComponent(email)}`)
+      return response.data
+    } catch (error) {
+      console.error('Error in getByEmail:', error)
+      throw error
+    }
+  }
 }
 
 export const PropietarisService = new PropietarisApiService()

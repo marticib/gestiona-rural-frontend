@@ -29,11 +29,19 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { ClientsService } from '@/services/clients'
 import { PropietarisService } from '@/services/propietaris'
+import { useAuth } from '@/contexts/auth-context.jsx'
+import { useRole } from '@/hooks/use-role'
 
 export function NouClientModal({ open, onOpenChange, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [propietaris, setPropietaris] = useState([])
+  const [currentUserPropietari, setCurrentUserPropietari] = useState(null)
   const { success, error } = useToast()
+  const { user } = useAuth()
+  const { isPropietari, isSuperadmin } = useRole()
+
+  // Determinar si l'usuari actual és propietari
+  const isCurrentUserPropietari = isPropietari() && !isSuperadmin()
 
   // Configuració de react-hook-form
   const {
@@ -86,10 +94,11 @@ export function NouClientModal({ open, onOpenChange, onSuccess }) {
   useEffect(() => {
     if (open) {
       carregarPropietaris()
+      carregarPropietariActual()
       reset()
       clearErrors()
     }
-  }, [open, reset, clearErrors])
+  }, [open, reset, clearErrors, user?.email])
 
   const carregarPropietaris = async () => {
     try {
@@ -102,13 +111,39 @@ export function NouClientModal({ open, onOpenChange, onSuccess }) {
     }
   }
 
+  const carregarPropietariActual = async () => {
+    if (isCurrentUserPropietari && user?.email) {
+      try {
+        const response = await PropietarisService.getByEmail(user.email)
+        if (response.success) {
+          setCurrentUserPropietari(response.data)
+          // Assignar automàticament el propietari als valors per defecte del formulari
+          reset(prev => ({
+            ...prev,
+            propietari_id: response.data.id.toString()
+          }))
+        }
+      } catch (err) {
+        console.error('Error carregant propietari actual:', err)
+        // Si no es troba el propietari, mostrar un error informatiu
+        error('No s\'ha trobat el teu registre de propietari. Contacta amb l\'administrador.')
+      }
+    }
+  }
+
   const onSubmit = async (data) => {
     setLoading(true)
     clearErrors()
     
+    // Si l'usuari és propietari, assegurar-nos que s'assigna el seu propietari
+    let propietariId = data.propietari_id
+    if (isCurrentUserPropietari && currentUserPropietari) {
+      propietariId = currentUserPropietari.id
+    }
+    
     // Convertir i mapejar dades per al backend
     const dataToSend = {
-      propietari_id: parseInt(data.propietari_id),
+      propietari_id: parseInt(propietariId),
       nom: data.nom,
       cognoms: data.cognoms,
       dni: data.dni.toUpperCase(),
@@ -136,29 +171,53 @@ export function NouClientModal({ open, onOpenChange, onSuccess }) {
       ultima_estada: null
     }
 
-    const response = await ClientsService.create(dataToSend)
-    
-    if (response.success) {
-      success('Client creat correctament')
-      onSuccess()
-      onOpenChange(false)
-      reset()
-    } else {
-      // Gestionar errors específics de validació
-      if (response.errors) {
-        Object.keys(response.errors).forEach(backendField => {
-          setError(backendField, {
-            type: 'server',
-            message: Array.isArray(response.errors[backendField]) 
+    try {
+      const response = await ClientsService.create(dataToSend)
+      
+      if (response.success) {
+        success('Client creat correctament')
+        onSuccess()
+        onOpenChange(false)
+        reset()
+      } else {
+        console.log('Error response:', response) // Debug
+        
+        // Gestionar errors específics de validació
+        if (response.errors) {
+          console.log('Validation errors:', response.errors) // Debug
+          
+          let hasUniqueErrors = false
+          Object.keys(response.errors).forEach(backendField => {
+            const errorMessage = Array.isArray(response.errors[backendField]) 
               ? response.errors[backendField][0] 
               : response.errors[backendField]
+            
+            console.log(`Setting error for field ${backendField}:`, errorMessage) // Debug
+            
+            setError(backendField, {
+              type: 'server',
+              message: errorMessage
+            })
+
+            // Detectar si és un error de camp duplicat
+            if (errorMessage.includes('already been taken') || errorMessage.includes('ja existeix')) {
+              hasUniqueErrors = true
+            }
           })
-        })
-        
-        error('Hi ha errors en el formulari. Revisa els camps marcats.')
-      } else {
-        error(response.message || 'Error en crear el client')
+          
+          // Missatge d'error més específic
+          if (hasUniqueErrors) {
+            error('Ja existeix un client amb aquest email o DNI. Modifica les dades i torna-ho a provar.')
+          } else {
+            error('Hi ha errors en el formulari. Revisa els camps marcats.')
+          }
+        } else {
+          error(response.message || 'Error en crear el client')
+        }
       }
+    } catch (err) {
+      console.error('Error creating client:', err)
+      error('Error de connexió. Prova-ho de nou.')
     }
     
     setLoading(false)
@@ -238,6 +297,13 @@ export function NouClientModal({ open, onOpenChange, onSuccess }) {
                     pattern: { 
                       value: /^[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/i, 
                       message: 'Format de DNI invàlid (ex: 12345678A)' 
+                    },
+                    onChange: (e) => {
+                      // Netejar errors de servidor quan l'usuari comença a escriure
+                      if (errors.dni && errors.dni.type === 'server') {
+                        clearErrors('dni')
+                      }
+                      return e
                     }
                   })}
                   placeholder="12345678A"
@@ -324,6 +390,13 @@ export function NouClientModal({ open, onOpenChange, onSuccess }) {
                       pattern: { 
                         value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, 
                         message: 'Format d\'email invàlid' 
+                      },
+                      onChange: (e) => {
+                        // Netejar errors de servidor quan l'usuari comença a escriure
+                        if (errors.email && errors.email.type === 'server') {
+                          clearErrors('email')
+                        }
+                        return e
                       }
                     })}
                     placeholder="client@example.com"
@@ -450,59 +523,78 @@ export function NouClientModal({ open, onOpenChange, onSuccess }) {
             </div>
           </div>
 
-          {/* Relació i estat */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b pb-2">Relació i Estat</h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="propietari_id">Propietari *</Label>
-                <Controller
-                  name="propietari_id"
-                  control={control}
-                  rules={{ required: 'Cal seleccionar un propietari' }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className={errors.propietari_id ? 'border-red-500' : ''}>
-                        <SelectValue placeholder="Selecciona un propietari" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {propietaris.map((propietari) => (
-                          <SelectItem key={propietari.id} value={propietari.id.toString()}>
-                            {propietari.nom_complet}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError error={errors.propietari_id} />
-              </div>
+          {/* Relació i estat - només visible per admins */}
+          {!isCurrentUserPropietari && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium border-b pb-2">Relació i Estat</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="propietari_id">Propietari *</Label>
+                  <Controller
+                    name="propietari_id"
+                    control={control}
+                    rules={{ required: 'Cal seleccionar un propietari' }}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className={errors.propietari_id ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Selecciona un propietari" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {propietaris.map((propietari) => (
+                            <SelectItem key={propietari.id} value={propietari.id.toString()}>
+                              {propietari.nom_complet}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError error={errors.propietari_id} />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="estat">Estat</Label>
-                <Controller
-                  name="estat"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className={errors.estat ? 'border-red-500' : ''}>
-                        <SelectValue placeholder="Selecciona l'estat" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {estats.map((estat) => (
-                          <SelectItem key={estat.value} value={estat.value}>
-                            {estat.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError error={errors.estat} />
+                <div className="space-y-2">
+                  <Label htmlFor="estat">Estat</Label>
+                  <Controller
+                    name="estat"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className={errors.estat ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Selecciona l'estat" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {estats.map((estat) => (
+                            <SelectItem key={estat.value} value={estat.value}>
+                              {estat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError error={errors.estat} />
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Missatge informatiu per propietaris */}
+          {isCurrentUserPropietari && currentUserPropietari && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <IconUser className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">
+                    Client assignat automàticament a: {currentUserPropietari.nom_complet}
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    Com a propietari, els clients es creen automàticament associats al teu perfil
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Informació addicional */}
           <div className="space-y-4">

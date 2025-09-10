@@ -27,7 +27,29 @@ class ClientsApiService {
       return response.data
     } catch (error) {
       console.error('Error creating client:', error)
-      throw error
+      
+      // Si és un error de validació (422), retornar l'error en el format esperat
+      if (error.response && error.response.status === 422) {
+        return {
+          success: false,
+          errors: error.response.data.errors || {},
+          message: error.response.data.message || 'Error de validació'
+        }
+      }
+      
+      // Per altres errors, retornar un error genèric
+      if (error.response && error.response.data) {
+        return {
+          success: false,
+          message: error.response.data.message || 'Error en crear el client'
+        }
+      }
+      
+      // Error de connexió o altres
+      return {
+        success: false,
+        message: 'Error de connexió'
+      }
     }
   }
 
@@ -37,7 +59,29 @@ class ClientsApiService {
       return response.data
     } catch (error) {
       console.error('Error updating client:', error)
-      throw error
+      
+      // Si és un error de validació (422), retornar l'error en el format esperat
+      if (error.response && error.response.status === 422) {
+        return {
+          success: false,
+          errors: error.response.data.errors || {},
+          message: error.response.data.message || 'Error de validació'
+        }
+      }
+      
+      // Per altres errors, retornar un error genèric
+      if (error.response && error.response.data) {
+        return {
+          success: false,
+          message: error.response.data.message || 'Error en actualitzar el client'
+        }
+      }
+      
+      // Error de connexió o altres
+      return {
+        success: false,
+        message: 'Error de connexió'
+      }
     }
   }
 
