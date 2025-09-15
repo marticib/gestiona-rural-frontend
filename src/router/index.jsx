@@ -8,6 +8,7 @@ import { ToastExamplePage } from "@/pages/toast-example.jsx"
 import { WelcomePage } from "@/pages/welcome"
 import { AuthGuard } from "@/components/auth-guard.jsx"
 import { PublicRoute } from "@/components/public-route.jsx"
+import { PublicLanding } from "@/components/public-landing.jsx"
 import { RoleGuard } from "@/components/role-guard.jsx"
 import { RoleBasedRedirect } from "@/components/role-based-redirect.jsx"
 import PropietarisPage from "@/pages/propietaris"
@@ -33,13 +34,13 @@ function ComingSoon({ title }) {
 }
 
 export const router = createBrowserRouter([
-  // Pàgina d'inici pública
+  // Pàgina d'inici pública (accessible per tothom)
   {
     path: "/",
     element: (
-      <PublicRoute>
+      <PublicLanding>
         <HomePage />
-      </PublicRoute>
+      </PublicLanding>
     ),
   },
   // Ruta pública del login

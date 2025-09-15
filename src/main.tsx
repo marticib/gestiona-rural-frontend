@@ -4,8 +4,12 @@ import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './contexts/auth-context.jsx'
 import { router } from './router'
 import { Toaster } from '@/components/ui/sonner'
-import './lib/api-interceptor.js' // Importar l'interceptor API
 import './index.css'
+
+// Només carregar l'interceptor API si no estem a la landing page
+if (window.location.pathname !== '/') {
+  import('./lib/api-interceptor.js')
+}
 
 const rootElement = document.getElementById('root')
 if (rootElement) {
