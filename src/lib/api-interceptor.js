@@ -1,10 +1,11 @@
 import { authService } from '@/services/auth'
 
+// Guardar referència original de fetch
+const originalFetch = window.fetch
+
 // Només activar l'interceptor si no estem a la landing page
 if (window.location.pathname !== '/') {
   // Interceptor global per a totes les crides fetch
-  const originalFetch = window.fetch
-
   window.fetch = async (url, options = {}) => {
     // Si és una crida a la API i no és login/register, afegir autenticació
     if (typeof url === 'string' && url.includes('/api/') && !url.includes('/auth/login') && !url.includes('/auth/register')) {

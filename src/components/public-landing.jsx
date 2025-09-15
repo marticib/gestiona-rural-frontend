@@ -1,7 +1,17 @@
 import { useAuth } from '@/contexts/auth-context.jsx'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export function PublicLanding({ children }) {
-  const { isLoading } = useAuth()
+  const { isLoading, user } = useAuth()
+  const navigate = useNavigate()
+
+  // Si arribem amb un usuari autenticat (via SSO), redirigir al dashboard
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate('/app', { replace: true })
+    }
+  }, [isLoading, user, navigate])
 
   // Mentre carrega, mostra spinner
   if (isLoading) {
@@ -15,6 +25,6 @@ export function PublicLanding({ children }) {
     )
   }
 
-  // Sempre mostra el contingut, independentment de si hi ha usuari o no
+  // Sempre mostra el contingut si no hi ha usuari (landing page)
   return children
 }

@@ -33,14 +33,14 @@ export function AuthProvider({ children }) {
   // Comprovar si hi ha un token guardat i validar-lo quan es carrega l'app
   useEffect(() => {
     const initializeAuth = async () => {
-      // Si estem a la landing page (/), no fer verificació d'autenticació
-      if (window.location.pathname === '/') {
+      // Primer, comprovar si hi ha paràmetres SSO a la URL
+      const ssoCheck = ssoService.checkSSO()
+      
+      // Si estem a la landing page (/) PERÒ NO hi ha paràmetres SSO, no fer verificació
+      if (window.location.pathname === '/' && !ssoCheck.hasSSO) {
         setIsLoading(false)
         return
       }
-      
-      // Primer, comprovar si hi ha paràmetres SSO a la URL
-      const ssoCheck = ssoService.checkSSO()
       
       if (ssoCheck.hasSSO) {
         // Hi ha token SSO, verificar-lo

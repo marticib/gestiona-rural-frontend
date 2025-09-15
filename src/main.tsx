@@ -6,8 +6,11 @@ import { router } from './router'
 import { Toaster } from '@/components/ui/sonner'
 import './index.css'
 
-// Només carregar l'interceptor API si no estem a la landing page
-if (window.location.pathname !== '/') {
+// Només carregar l'interceptor API si no estem a la landing page O si hi ha paràmetres SSO
+const urlParams = new URLSearchParams(window.location.search)
+const hasSSOToken = urlParams.has('sso_token')
+
+if (window.location.pathname !== '/' || hasSSOToken) {
   import('./lib/api-interceptor.js')
 }
 
