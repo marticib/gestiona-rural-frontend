@@ -59,13 +59,13 @@ export default function HomePage() {
                   </Link>
                 </>
               ) : (
-                // Si no està autenticat, mostra botons de login i registre del Hub
+                // Si no està autenticat, mostra botons de login local i registre del Hub
                 <>
-                  <a href={hubLoginUrl}>
+                  <Link to="/login">
                     <Button variant="ghost" className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 transform transition-all duration-300 hover:scale-105">
                       Iniciar Sessió
                     </Button>
-                  </a>
+                  </Link>
                   <a href={hubRegisterUrl}>
                     <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg">
                       Registrar-se

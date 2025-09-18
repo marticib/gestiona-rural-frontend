@@ -12,15 +12,9 @@ if (window.location.pathname !== '/') {
       const token = authService.getToken()
       
       if (!token) {
-        // No hi ha token, però només redirigir si no estem a la landing page
-        if (window.location.pathname !== '/' && !window.location.pathname.includes('/landing')) {
-          console.warn('No authentication token found, redirecting to login')
-          window.location.href = '/login'
-          throw new Error('No authentication token available')
-        }
-        
-        // Si estem a la landing page, permetre que la crida falli sense redirigir
-        console.warn('No authentication token found on landing page, API call will fail')
+        // No hi ha token, permetre que les crides fallin sense redirigir automàticament
+        // L'AuthGuard ja s'encarregarà de redirigir si cal
+        console.warn('No authentication token found, API call will proceed without auth')
       } else {
         // Afegir headers d'autenticació només si hi ha token
         options.headers = {
@@ -35,11 +29,11 @@ if (window.location.pathname !== '/') {
     try {
       const response = await originalFetch(url, options)
       
-      // Si la resposta és 401 i no és al login, gestionar sessió expirada
-      if (response.status === 401 && !window.location.pathname.includes('/login')) {
+      // Si la resposta és 401, gestionar sessió expirada
+      if (response.status === 401 && !window.location.pathname.includes('/login') && window.location.pathname !== '/') {
         authService.logout()
         alert('La teva sessió ha expirat. Hauràs de tornar a iniciar sessió.')
-        window.location.href = '/login'
+        window.location.href = '/'
       }
       
       return response

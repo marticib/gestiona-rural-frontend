@@ -43,13 +43,13 @@ export const router = createBrowserRouter([
       </PublicLanding>
     ),
   },
-  // Ruta pública del login
+  // Ruta pública del login local
   {
     path: "/login",
     element: (
-      <PublicRoute>
+      <PublicLanding>
         <LoginPage />
-      </PublicRoute>
+      </PublicLanding>
     ),
   },
   // Ruta pública del registre

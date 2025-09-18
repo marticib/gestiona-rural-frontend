@@ -307,16 +307,28 @@ const ViatgersPage = () => {
 
   const getEstatBadge = (estat) => {
     const variants = {
-      'pendent': { variant: 'secondary', icon: Clock, text: 'Pendent' },
-      'omplert': { variant: 'default', icon: CheckCircle, text: 'Completat' },
-      'enviat': { variant: 'default', icon: CheckCircle, text: 'Enviat' }
+      'pendent': { 
+        classes: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-md', 
+        icon: Clock, 
+        text: 'Pendent' 
+      },
+      'omplert': { 
+        classes: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 shadow-md', 
+        icon: CheckCircle, 
+        text: 'Completat' 
+      },
+      'enviat': { 
+        classes: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-md', 
+        icon: CheckCircle, 
+        text: 'Enviat' 
+      }
     }
     
     const config = variants[estat] || variants['pendent']
     const Icon = config.icon
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
+      <Badge className={`flex items-center gap-1 ${config.classes}`}>
         <Icon className="w-3 h-3" />
         {config.text}
       </Badge>
@@ -324,125 +336,216 @@ const ViatgersPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="w-6 h-6" />
-            Gestió de Viatgers
-          </h1>
-          <p className="text-muted-foreground">
-            Gestiona els registres de viatgers per reportar als Mossos d'Esquadra
-          </p>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            onClick={() => {
-              setReservaSeleccionada(null)
-              setMostrarModal(true)
-            }}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Nou Formulari
-          </Button>
-          
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute top-20 -left-20 w-72 h-72 bg-gradient-to-r from-teal-100 to-cyan-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+      <div className="absolute top-40 -right-20 w-72 h-72 bg-gradient-to-r from-cyan-100 to-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
+      <div className="absolute -bottom-20 left-20 w-72 h-72 bg-gradient-to-r from-blue-100 to-teal-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-500"></div>
 
-      {/* Filtres */}
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Cercar per nom, cognoms o DNI..."
-              value={filtres.cerca}
-              onChange={(e) => setFiltres(prev => ({ ...prev, cerca: e.target.value }))}
-              className="pl-9"
-            />
+      <div className="relative flex flex-col gap-8 py-8 px-6 md:px-8">
+        {/* Header amb estil modern */}
+        <div className="animate-in fade-in-2 slide-in-from-top-4 duration-1000">
+          <div className="flex items-center justify-between bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-xl">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">Gestió de Viatgers</h1>
+              <p className="text-lg text-gray-600">
+                <span className="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                  Gestiona els registres de viatgers per reportar als Mossos d'Esquadra
+                </span>
+              </p>
+            </div>
+            <Button 
+              onClick={() => {
+                setReservaSeleccionada(null)
+                setMostrarModal(true)
+              }}
+              className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-12 px-6"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Nou Formulari
+            </Button>
           </div>
-
-          <Select
-            value={filtres.estat}
-            onValueChange={(value) => setFiltres(prev => ({ ...prev, estat: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Tots els estats" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="tots">Tots els estats</SelectItem>
-              <SelectItem value="pendent">Pendent</SelectItem>
-              <SelectItem value="omplert">Completat</SelectItem>
-              <SelectItem value="enviat">Enviat</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filtres.reserva_id}
-            onValueChange={(value) => setFiltres(prev => ({ ...prev, reserva_id: value }))}
-            disabled={loadingReserves}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={loadingReserves ? "Carregant reserves..." : "Totes les reserves"} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="totes">Totes les reserves</SelectItem>
-              {reserves.map((reserva) => (
-                <SelectItem key={reserva.id} value={reserva.id.toString()}>
-                  #{reserva.id} - {reserva.client?.nom || 'Sense client'} 
-                  ({new Date(reserva.data_entrada).toLocaleDateString()})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
-      </div>
 
-      {/* Llista de viatgers */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Viatgers Registrats</CardTitle>
-          <CardDescription>
-            {viatgersFiltrats.length} de {viatgers.length} viatgers
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        {/* Filtres amb estil modern */}
+        <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-200">
+          <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-xl">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-1 items-center space-x-4">
+                <div className="relative flex-1 max-w-sm group">
+                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-teal-600" />
+                  <Input
+                    placeholder="Cercar per nom, cognoms o DNI..."
+                    value={filtres.cerca}
+                    onChange={(e) => setFiltres(prev => ({ ...prev, cerca: e.target.value }))}
+                    className="pl-12 border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-xl h-12 transition-all duration-300"
+                  />
+                </div>
+                <Select
+                  value={filtres.estat}
+                  onValueChange={(value) => setFiltres(prev => ({ ...prev, estat: value }))}
+                >
+                  <SelectTrigger className="w-40 border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-xl h-12 transition-all duration-300">
+                    <SelectValue placeholder="Estat" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                    <SelectItem value="tots" className="rounded-lg hover:bg-teal-50 transition-colors duration-200">Tots els estats</SelectItem>
+                    <SelectItem value="pendent" className="rounded-lg hover:bg-teal-50 transition-colors duration-200">Pendent</SelectItem>
+                    <SelectItem value="omplert" className="rounded-lg hover:bg-teal-50 transition-colors duration-200">Completat</SelectItem>
+                    <SelectItem value="enviat" className="rounded-lg hover:bg-teal-50 transition-colors duration-200">Enviat</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={filtres.reserva_id}
+                  onValueChange={(value) => setFiltres(prev => ({ ...prev, reserva_id: value }))}
+                  disabled={loadingReserves}
+                >
+                  <SelectTrigger className="w-60 border-gray-200 focus:border-teal-500 focus:ring-teal-500 rounded-xl h-12 transition-all duration-300">
+                    <SelectValue placeholder={loadingReserves ? "Carregant..." : "Reserva"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                    <SelectItem value="totes" className="rounded-lg hover:bg-teal-50 transition-colors duration-200">Totes les reserves</SelectItem>
+                    {reserves.map((reserva) => (
+                      <SelectItem key={reserva.id} value={reserva.id.toString()} className="rounded-lg hover:bg-teal-50 transition-colors duration-200">
+                        #{reserva.id} - {reserva.client?.nom || 'Sense client'} 
+                        ({new Date(reserva.data_entrada).toLocaleDateString()})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" className="border-gray-200 hover:bg-teal-50 hover:border-teal-300 rounded-xl h-12 px-4 transition-all duration-300">
+                  <Filter className="mr-2 h-4 w-4 text-teal-600" />
+                  Filtres
+                </Button>
+                <Button variant="outline" className="border-gray-200 hover:bg-teal-50 hover:border-teal-300 rounded-xl h-12 px-4 transition-all duration-300">
+                  <Download className="mr-2 h-4 w-4 text-teal-600" />
+                  Exportar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Estadístiques amb estil modern */}
+        <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-400">
+          <div className="grid gap-6 md:grid-cols-4">
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">{viatgers.length}</div>
+                  <p className="text-gray-600 font-medium">Total Viatgers</p>
+                </div>
+                <div className="bg-gradient-to-r from-teal-500 to-cyan-600 p-3 rounded-2xl">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                    {viatgers.filter(v => v.estat_formulari === 'pendent').length}
+                  </div>
+                  <p className="text-gray-600 font-medium">Pendents</p>
+                </div>
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-3 rounded-2xl">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                    {viatgers.filter(v => v.estat_formulari === 'omplert').length}
+                  </div>
+                  <p className="text-gray-600 font-medium">Completats</p>
+                </div>
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-3 rounded-2xl">
+                  <CheckCircle className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">
+                    {mesosOrdenats.length}
+                  </div>
+                  <p className="text-gray-600 font-medium">Mesos Actius</p>
+                </div>
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 p-3 rounded-2xl">
+                  <Calendar className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      {/* Llista de viatgers amb estil modern */}
+      <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-600">
+        <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl overflow-hidden">
+          <div className="p-8 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Viatgers Registrats</h2>
+            <p className="text-gray-600">
+              <span className="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent font-semibold">
+                {viatgersFiltrats.length} de {viatgers.length} viatgers
+              </span>
+            </p>
+          </div>
+          <div className="p-8">
           {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mb-4"></div>
+              <p className="text-gray-600 font-medium">Carregant viatgers...</p>
             </div>
           ) : mesosOrdenats.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No s'han trobat viatgers amb els filtres aplicats
+            <div className="text-center py-16">
+              <div className="bg-gradient-to-r from-teal-500 to-cyan-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">No hi ha viatgers</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                No s'han trobat viatgers amb els filtres aplicats. Prova d'ajustar els criteris de cerca.
+              </p>
             </div>
           ) : (
             <div className="space-y-8">
-              {mesosOrdenats.map((mesData) => (
-                <div key={mesData.mes} className="space-y-4">
-                  {/* Capçalera del mes - Clickable */}
+              {mesosOrdenats.map((mesData, index) => (
+                <div key={mesData.mes} className="space-y-6" style={{ animationDelay: `${index * 100}ms` }}>
+                  {/* Capçalera del mes - Modern */}
                   <div 
-                    className="flex items-center gap-2 pb-2 border-b border-border cursor-pointer hover:bg-muted/30 rounded-lg p-2 -m-2 transition-colors"
+                    className="flex items-center gap-4 pb-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50/50 rounded-2xl p-4 -m-4 transition-all duration-300 group"
                     onClick={() => toggleCollapseMes(mesData.mes)}
                   >
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="p-1 h-6 w-6"
+                      className="p-2 h-10 w-10 rounded-xl hover:bg-teal-100 group-hover:bg-teal-100 transition-colors duration-300"
                     >
                       {mesosCollapsed[mesData.mes] ? (
-                        <ChevronDown className="w-4 h-4" />
+                        <ChevronDown className="w-5 h-5 text-teal-600" />
                       ) : (
-                        <ChevronUp className="w-4 h-4" />
+                        <ChevronUp className="w-5 h-5 text-teal-600" />
                       )}
                     </Button>
-                    <Calendar className="w-5 h-5 text-primary" />
-                    <h2 className="text-xl font-semibold text-primary capitalize">
-                      {mesData.nomMes}
-                    </h2>
-                    <Badge variant="outline">
+                    <div className="bg-gradient-to-r from-teal-500 to-cyan-500 p-3 rounded-2xl">
+                      <Calendar className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent capitalize">
+                        {mesData.nomMes}
+                      </h2>
+                      <p className="text-gray-600 font-medium">
+                        {Object.values(mesData.reserves).reduce((total, reserva) => total + reserva.viatgers.length, 0)} viatgers en {Object.keys(mesData.reserves).length} reserves
+                      </p>
+                    </div>
+                    <Badge className="bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-700 border-0 font-semibold px-4 py-2">
                       {Object.values(mesData.reserves).reduce((total, reserva) => total + reserva.viatgers.length, 0)} viatgers
                     </Badge>
                   </div>
@@ -455,7 +558,7 @@ const ViatgersPage = () => {
                         : 'max-h-[10000px] opacity-100'
                     }`}
                   >
-                    <div className="space-y-4 ml-6 pt-2">
+                    <div className="pl-8 space-y-6">
                       {Object.values(mesData.reserves)
                         .sort((a, b) => {
                           // Ordenar reserves per data d'entrada (més noves primer)
@@ -463,51 +566,63 @@ const ViatgersPage = () => {
                           const dataB = new Date(b.reserva?.data_entrada || '1970-01-01')
                           return dataB - dataA
                         })
-                        .map((grup) => (
-                        <div key={grup.reserva_id} className="rounded-lg p-4 ">
+                        .map((grup, reservaIndex) => (
+                        <div key={grup.reserva_id} className="bg-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" style={{ animationDelay: `${reservaIndex * 50}ms` }}>
                           {/* Capçalera de la reserva */}
-                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4 pb-4 border-b">
-                            <div className="flex items-center gap-3">
+                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 pb-4 border-b border-gray-200">
+                            <div className="flex items-center gap-4 flex-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleCollapseReserva(grup.reserva_id)}
-                                className="p-1 h-8 w-8"
+                                className="p-2 h-10 w-10 rounded-xl hover:bg-teal-100 transition-colors duration-300"
                               >
                                 {reservesCollapsed[grup.reserva_id] ? (
-                                  <ChevronDown className="w-4 h-4" />
+                                  <ChevronDown className="w-5 h-5 text-teal-600" />
                                 ) : (
-                                  <ChevronUp className="w-4 h-4" />
+                                  <ChevronUp className="w-5 h-5 text-teal-600" />
                                 )}
                               </Button>
-                              <div>
-                                <h3 className="font-semibold text-lg flex items-center gap-2">
-                                  Reserva #{grup.reserva_id}
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                                  <span className="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                                    Reserva #{grup.reserva_id}
+                                  </span>
                                   {grup.reserva?.allotjament && (
-                                    <span className="text-sm font-normal text-muted-foreground">
-                                      • {grup.reserva.allotjament.nom || grup.reserva.allotjament}
+                                    <span className="text-sm font-normal text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                      {grup.reserva.allotjament.nom || grup.reserva.allotjament}
                                     </span>
                                   )}
-                                  <Badge variant="outline">{grup.viatgers.length} viatgers</Badge>
+                                  <Badge className="bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-700 border-0 font-semibold">
+                                    {grup.viatgers.length} viatgers
+                                  </Badge>
                                 </h3>
                                 {grup.reserva && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {new Date(grup.reserva.data_entrada).toLocaleDateString()} - {new Date(grup.reserva.data_sortida).toLocaleDateString()}
-                                    {grup.reserva.client && ` • ${grup.reserva.client.nom}`}
-                                  </p>
+                                  <div className="text-sm text-gray-600 space-y-1">
+                                    <p className="flex items-center gap-2">
+                                      <Calendar className="h-4 w-4" />
+                                      {new Date(grup.reserva.data_entrada).toLocaleDateString()} - {new Date(grup.reserva.data_sortida).toLocaleDateString()}
+                                    </p>
+                                    {grup.reserva.client && (
+                                      <p className="flex items-center gap-2">
+                                        <Users className="h-4 w-4" />
+                                        {grup.reserva.client.nom}
+                                      </p>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             </div>
                             
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleGenerarTxt(grup.reserva_id)}
-                                className="flex items-center gap-1"
+                                className="bg-white/80 border-gray-200 hover:bg-teal-50 hover:border-teal-300 text-teal-700 hover:text-teal-800 rounded-xl transition-all duration-300 font-medium"
                               >
-                                <Download className="w-3 h-3" />
-                                TXT
+                                <Download className="w-4 h-4 mr-2" />
+                                TXT Mossos
                               </Button>
                               
                               <Button
@@ -517,9 +632,9 @@ const ViatgersPage = () => {
                                   setReservaSeleccionada(grup.reserva_id)
                                   setMostrarModal(true)
                                 }}
-                                className="flex items-center gap-1"
+                                className="bg-white/80 border-gray-200 hover:bg-teal-50 hover:border-teal-300 text-teal-700 hover:text-teal-800 rounded-xl transition-all duration-300 font-medium"
                               >
-                                <Plus className="w-3 h-3" />
+                                <Plus className="w-4 h-4 mr-2" />
                                 Formulari
                               </Button>
 
@@ -527,10 +642,10 @@ const ViatgersPage = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleMostrarLinkReserva(grup.reserva_id)}
-                                className="flex items-center gap-1"
+                                className="bg-white/80 border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-blue-700 hover:text-blue-800 rounded-xl transition-all duration-300 font-medium"
                                 title="Veure link del formulari de reserva"
                               >
-                                <Link2 className="w-3 h-3" />
+                                <Link2 className="w-4 h-4 mr-2" />
                                 Link
                               </Button>
 
@@ -538,38 +653,57 @@ const ViatgersPage = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleEliminarFormulari(grup.reserva_id)}
-                                className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="bg-white/80 border-gray-200 hover:bg-red-50 hover:border-red-300 text-red-600 hover:text-red-700 rounded-xl transition-all duration-300 font-medium"
                                 title="Eliminar formulari i tots els viatgers"
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Trash2 className="w-4 h-4 mr-2" />
                                 Eliminar
                               </Button>
                             </div>
                           </div>
 
-                          {/* Llista de viatgers de la reserva - Collapsible amb animació */}
+                          {/* Llista de viatgers de la reserva - Modern */}
                           <div 
-                            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                            className={`overflow-hidden transition-all duration-500 ease-in-out ${
                               reservesCollapsed[grup.reserva_id] 
                                 ? 'max-h-0 opacity-0' 
                                 : 'max-h-[2000px] opacity-100'
                             }`}
                           >
-                            <div className="space-y-3 pt-2">
-                              {grup.viatgers.map((viatger) => (
-                                <div key={viatger.id} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-3 bg-background rounded-md transition-all duration-200 hover:bg-muted/50">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <h4 className="font-medium">
-                                        {viatger.nom} {viatger.cognoms}
-                                      </h4>
-                                      {getEstatBadge(viatger.estat_formulari)}
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
-                                      <div>DNI: {viatger.dni_passaport || 'No especificat'}</div>
-                                      <div>Email: {viatger.email || 'No especificat'}</div>
-                                      <div>Telèfon: {viatger.telefon || 'No especificat'}</div>
+                            <div className="space-y-4 pt-4">
+                              {grup.viatgers.map((viatger, viatgerIndex) => (
+                                <div key={viatger.id} className="bg-white/80 border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.01]" style={{ animationDelay: `${viatgerIndex * 50}ms` }}>
+                                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                                    <div className="flex items-center gap-4 flex-1">
+                                      <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                        {viatger.nom?.charAt(0) || '?'}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                          <h4 className="text-lg font-semibold text-gray-900">
+                                            {viatger.nom} {viatger.cognoms}
+                                          </h4>
+                                          {getEstatBadge(viatger.estat_formulari)}
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                          <div className="flex items-center gap-2 text-gray-600">
+                                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                            <span className="font-medium">DNI:</span>
+                                            <span>{viatger.dni_passaport || 'No especificat'}</span>
+                                          </div>
+                                          <div className="flex items-center gap-2 text-gray-600">
+                                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                            <span className="font-medium">Email:</span>
+                                            <span>{viatger.email || 'No especificat'}</span>
+                                          </div>
+                                          <div className="flex items-center gap-2 text-gray-600">
+                                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                            <span className="font-medium">Telèfon:</span>
+                                            <span>{viatger.telefon || 'No especificat'}</span>
+                                          </div>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -584,8 +718,9 @@ const ViatgersPage = () => {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+      </div>
 
       {/* Modal generador de formularis */}
       <GenerarFormulariModal
@@ -643,6 +778,7 @@ const ViatgersPage = () => {
         cancelText="Cancel·lar"
         isLoading={eliminantFormulari}
       />
+      </div>
     </div>
   )
 }

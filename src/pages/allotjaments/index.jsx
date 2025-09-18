@@ -193,262 +193,319 @@ export default function AllotjamentsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 py-4 md:py-6 px-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {isSuperadmin() ? 'Allotjaments' : 'Els Meus Allotjaments'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isSuperadmin() 
-              ? 'Gestiona tots els allotjaments del sistema' 
-              : 'Gestiona els teus allotjaments'
-            }
-          </p>
-        </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <IconPlus className="mr-2 h-4 w-4" />
-          Nou Allotjament
-        </Button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 right-10 w-64 h-64 bg-gradient-to-br from-orange-200 to-yellow-200 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-20 left-10 w-80 h-80 bg-gradient-to-tr from-green-200 to-blue-200 rounded-full blur-3xl opacity-15 animate-pulse delay-300"></div>
       </div>
+      
+      <div className="relative flex flex-col gap-8 py-8 px-6 md:px-8">
+        {/* Header */}
+        <div className="animate-in fade-in-2 slide-in-from-top-4 duration-1000">
+          <div className="flex items-center justify-between bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-xl">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                {isSuperadmin() ? 'Allotjaments' : 'Els Meus Allotjaments'}
+              </h1>
+              <p className="text-lg text-gray-600">
+                <span className="bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">
+                  {isSuperadmin() 
+                    ? 'Gestiona tots els allotjaments del sistema' 
+                    : 'Gestiona els teus allotjaments'
+                  }
+                </span>
+              </p>
+            </div>
+            <Button onClick={() => setModalOpen(true)} className="bg-gradient-to-r from-orange-600 to-green-600 hover:from-orange-700 hover:to-green-700 text-white font-semibold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-12 px-6">
+              <IconPlus className="mr-2 h-5 w-5" />
+              Nou Allotjament
+            </Button>
+          </div>
+        </div>
 
-      {/* Filtres i cerca */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-1 items-center space-x-2">
-          <div className="relative flex-1 max-w-sm">
-            <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Cercar allotjaments..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
+        {/* Filtres i cerca */}
+        <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-200">
+          <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-xl">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-1 items-center space-x-4">
+                <div className="relative flex-1 max-w-sm group">
+                  <IconSearch className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-orange-600" />
+                  <Input
+                    placeholder="Cercar allotjaments..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl h-12 transition-all duration-300"
+                  />
+                </div>
+                <Select value={filterEstat} onValueChange={setFilterEstat}>
+                  <SelectTrigger className="w-40 border-gray-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl h-12 transition-all duration-300">
+                    <SelectValue placeholder="Estat" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                    <SelectItem value="all" className="rounded-lg hover:bg-orange-50 transition-colors duration-200">Tots</SelectItem>
+                    <SelectItem value="actiu" className="rounded-lg hover:bg-orange-50 transition-colors duration-200">Actius</SelectItem>
+                    <SelectItem value="inactiu" className="rounded-lg hover:bg-orange-50 transition-colors duration-200">Inactius</SelectItem>
+                    <SelectItem value="manteniment" className="rounded-lg hover:bg-orange-50 transition-colors duration-200">Manteniment</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterTipus} onValueChange={setFilterTipus}>
+                  <SelectTrigger className="w-40 border-gray-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl h-12 transition-all duration-300">
+                    <SelectValue placeholder="Tipus" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                    <SelectItem value="all" className="rounded-lg hover:bg-orange-50 transition-colors duration-200">Tots</SelectItem>
+                    {tipusAllotjament.map((tipus) => (
+                      <SelectItem key={tipus.value} value={tipus.value} className="rounded-lg hover:bg-orange-50 transition-colors duration-200">
+                        {tipus.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {/* Mostrar filtre de propietari només per superadmins */}
+                {isSuperadmin() && (
+                  <Select value={filterPropietari} onValueChange={setFilterPropietari}>
+                    <SelectTrigger className="w-48 border-gray-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl h-12 transition-all duration-300">
+                      <SelectValue placeholder="Propietari" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                      <SelectItem value="all" className="rounded-lg hover:bg-orange-50 transition-colors duration-200">Tots els propietaris</SelectItem>
+                      {propietaris.map((propietari) => (
+                        <SelectItem key={propietari.id} value={propietari.id.toString()} className="rounded-lg hover:bg-orange-50 transition-colors duration-200">
+                          {propietari.nom_complet}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" className="border-gray-200 hover:bg-orange-50 hover:border-orange-300 rounded-xl h-12 px-4 transition-all duration-300">
+                  <IconFilter className="mr-2 h-4 w-4 text-orange-600" />
+                  Filtres
+                </Button>
+                <Button variant="outline" className="border-gray-200 hover:bg-orange-50 hover:border-orange-300 rounded-xl h-12 px-4 transition-all duration-300">
+                  <IconDownload className="mr-2 h-4 w-4 text-orange-600" />
+                  Exportar
+                </Button>
+              </div>
+            </div>
           </div>
-          <Select value={filterEstat} onValueChange={setFilterEstat}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Estat" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tots</SelectItem>
-              <SelectItem value="actiu">Actius</SelectItem>
-              <SelectItem value="inactiu">Inactius</SelectItem>
-              <SelectItem value="manteniment">Manteniment</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterTipus} onValueChange={setFilterTipus}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Tipus" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tots</SelectItem>
-              {tipusAllotjament.map((tipus) => (
-                <SelectItem key={tipus.value} value={tipus.value}>
-                  {tipus.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {/* Mostrar filtre de propietari només per superadmins */}
-          {isSuperadmin() && (
-            <Select value={filterPropietari} onValueChange={setFilterPropietari}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Propietari" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tots els propietaris</SelectItem>
-                {propietaris.map((propietari) => (
-                  <SelectItem key={propietari.id} value={propietari.id.toString()}>
-                    {propietari.nom_complet}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <IconFilter className="mr-2 h-4 w-4" />
-            Filtres
-          </Button>
-          <Button variant="outline" size="sm">
-            <IconDownload className="mr-2 h-4 w-4" />
-            Exportar
-          </Button>
-        </div>
-      </div>
 
-      {/* Estadístiques */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-lg border p-4">
-          <div className="text-2xl font-bold">{totalItems}</div>
-          <p className="text-sm text-muted-foreground">Total Allotjaments</p>
-        </div>
-        <div className="rounded-lg border p-4">
-          <div className="text-2xl font-bold text-green-600">
-            {allotjaments.filter(a => a.estat === 'actiu').length}
+        {/* Estadístiques amb estil modern */}
+        <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-400">
+          <div className="grid gap-6 md:grid-cols-4">
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">{totalItems}</div>
+                  <p className="text-gray-600 font-medium">Total Allotjaments</p>
+                </div>
+                <div className="bg-gradient-to-r from-orange-500 to-green-600 p-3 rounded-2xl">
+                  <IconBuilding className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-green-600">
+                    {allotjaments.filter(a => a.estat === 'actiu').length}
+                  </div>
+                  <p className="text-gray-600 font-medium">Allotjaments Actius</p>
+                </div>
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-3 rounded-2xl">
+                  <IconUsers className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-yellow-600">
+                    {allotjaments.filter(a => a.estat === 'manteniment').length}
+                  </div>
+                  <p className="text-gray-600 font-medium">En Manteniment</p>
+                </div>
+                <div className="bg-gradient-to-r from-yellow-500 to-orange-600 p-3 rounded-2xl">
+                  <IconMapPin className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {allotjaments.length > 0 ? 
+                      (allotjaments.reduce((sum, a) => sum + parseFloat(a.preu_per_nit || 0), 0) / allotjaments.length).toFixed(0) 
+                      : 0}€
+                  </div>
+                  <p className="text-gray-600 font-medium">Preu Mitjà/Nit</p>
+                </div>
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-3 rounded-2xl">
+                  <IconCurrencyEuro className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">Allotjaments Actius</p>
         </div>
-        <div className="rounded-lg border p-4">
-          <div className="text-2xl font-bold text-yellow-600">
-            {allotjaments.filter(a => a.estat === 'manteniment').length}
-          </div>
-          <p className="text-sm text-muted-foreground">En Manteniment</p>
-        </div>
-        <div className="rounded-lg border p-4">
-          <div className="text-2xl font-bold text-blue-600">
-            {allotjaments.length > 0 ? 
-              (allotjaments.reduce((sum, a) => sum + parseFloat(a.preu_per_nit || 0), 0) / allotjaments.length).toFixed(0) 
-              : 0}€
-          </div>
-          <p className="text-sm text-muted-foreground">Preu Mitjà/Nit</p>
-        </div>
-      </div>
 
-      {/* Taula */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Allotjament</TableHead>
-              <TableHead>Propietari</TableHead>
-              <TableHead>Ubicació</TableHead>
-              <TableHead>Tipus</TableHead>
-              <TableHead>Capacitat</TableHead>
-              <TableHead>Preu/Nit</TableHead>
-              <TableHead>Estat</TableHead>
-              <TableHead className="text-right">Accions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  Carregant allotjaments...
-                </TableCell>
-              </TableRow>
-            ) : allotjaments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
-                  No s'han trobat allotjaments
-                </TableCell>
-              </TableRow>
-            ) : (
-              allotjaments.map((allotjament) => (
-                <TableRow key={allotjament.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center space-x-2">
-                      <IconBuilding className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="font-semibold">{allotjament.nom}</div>
-                        <div className="text-sm text-muted-foreground truncate max-w-48">
-                          {allotjament.descripcio}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {allotjament.propietari ? allotjament.propietari.nom + ' ' + allotjament.propietari.cognoms : '-'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <IconMapPin className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-sm">{allotjament.ciutat}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{getTipusBadge(allotjament.tipus)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <IconUsers className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-sm">{allotjament.capacitat_maxima}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <IconCurrencyEuro className="h-3 w-3 text-muted-foreground" />
-                      <span className="font-medium">{allotjament.preu_per_nit}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{getEstatBadge(allotjament.estat)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Obrir menú</span>
-                          <IconPencil className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Accions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild>
-                          <Link to={`/allotjaments/${allotjament.id}`}>
-                            <IconEye className="mr-2 h-4 w-4" />
-                            Veure detalls
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to={`/allotjaments/${allotjament.id}/editar`}>
-                            <IconPencil className="mr-2 h-4 w-4" />
-                            Editar
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => eliminarAllotjament(allotjament.id)}
-                        >
-                          <IconTrash className="mr-2 h-4 w-4" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        {/* Taula amb estil modern */}
+        <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-600">
+          <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-gray-200 hover:bg-orange-50/50">
+                  <TableHead className="font-semibold text-gray-700">Allotjament</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Propietari</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Ubicació</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Tipus</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Capacitat</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Preu/Nit</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Estat</TableHead>
+                  <TableHead className="text-right font-semibold text-gray-700">Accions</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Paginació */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Mostrant {((currentPage - 1) * 15) + 1} a {Math.min(currentPage * 15, totalItems)} de {totalItems} allotjaments
-          </p>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => carregarAllotjaments(currentPage - 1)}
-              disabled={currentPage <= 1}
-            >
-              Anterior
-            </Button>
-            <span className="text-sm">
-              Pàgina {currentPage} de {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => carregarAllotjaments(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-            >
-              Següent
-            </Button>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex items-center justify-center space-x-3">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+                        <span className="text-gray-600">Carregant allotjaments...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : allotjaments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="text-gray-500">No s'han trobat allotjaments</div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  allotjaments.map((allotjament) => (
+                    <TableRow key={allotjament.id} className="border-gray-200 hover:bg-orange-50/30 transition-all duration-200">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-gradient-to-r from-orange-500 to-green-600 p-2 rounded-xl">
+                            <IconBuilding className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">{allotjament.nom}</div>
+                            <div className="text-sm text-gray-500 truncate max-w-48">
+                              {allotjament.descripcio}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-700">
+                          {allotjament.propietari ? allotjament.propietari.nom + ' ' + allotjament.propietari.cognoms : '-'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <IconMapPin className="h-4 w-4 text-orange-600" />
+                          <span className="text-sm text-gray-700">{allotjament.ciutat}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getTipusBadge(allotjament.tipus)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <IconUsers className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-gray-700">{allotjament.capacitat_maxima}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <IconCurrencyEuro className="h-4 w-4 text-blue-600" />
+                          <span className="font-semibold text-gray-900">{allotjament.preu_per_nit}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getEstatBadge(allotjament.estat)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-orange-100 rounded-xl transition-all duration-200">
+                              <span className="sr-only">Obrir menú</span>
+                              <IconPencil className="h-4 w-4 text-gray-600" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                            <DropdownMenuLabel className="text-gray-700 font-semibold">Accions</DropdownMenuLabel>
+                            <DropdownMenuItem asChild className="rounded-lg hover:bg-orange-50 transition-colors duration-200">
+                              <Link to={`/allotjaments/${allotjament.id}`}>
+                                <IconEye className="mr-2 h-4 w-4 text-blue-600" />
+                                Veure detalls
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild className="rounded-lg hover:bg-orange-50 transition-colors duration-200">
+                              <Link to={`/allotjaments/${allotjament.id}/editar`}>
+                                <IconPencil className="mr-2 h-4 w-4 text-green-600" />
+                                Editar
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="bg-gray-200" />
+                            <DropdownMenuItem
+                              className="text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-200"
+                              onClick={() => eliminarAllotjament(allotjament.id)}
+                            >
+                              <IconTrash className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </div>
-      )}
 
-      {/* Modal per afegir nou allotjament */}
-      <NouAllotjamentModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onSuccess={() => carregarAllotjaments(1)}
-      />
+        {/* Paginació amb estil modern */}
+        {totalPages > 1 && (
+          <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-800">
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-6 shadow-xl">
+              <div className="flex items-center justify-between">
+                <p className="text-gray-600">
+                  Mostrant {((currentPage - 1) * 15) + 1} a {Math.min(currentPage * 15, totalItems)} de {totalItems} allotjaments
+                </p>
+                <div className="flex items-center space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => carregarAllotjaments(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="border-gray-200 hover:bg-orange-50 hover:border-orange-300 rounded-xl px-4 py-2 transition-all duration-300 disabled:opacity-50"
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-gray-700 font-medium px-3 py-2 bg-orange-50 rounded-xl border border-orange-200">
+                    Pàgina {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => carregarAllotjaments(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="border-gray-200 hover:bg-orange-50 hover:border-orange-300 rounded-xl px-4 py-2 transition-all duration-300 disabled:opacity-50"
+                  >
+                    Següent
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal per afegir nou allotjament */}
+        <NouAllotjamentModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          onSuccess={() => carregarAllotjaments(1)}
+        />
+      </div>
     </div>
   )
 }

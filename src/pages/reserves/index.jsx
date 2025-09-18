@@ -259,117 +259,135 @@ export default function Reserves() {
   }
 
   return (
-    <TooltipProvider>
-      <div className="flex flex-col gap-6 py-4 md:py-6 px-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">
-            {isPropietari() ? 'Les Meves Reserves' : 'Reserves'}
-          </h1>
-          <p className="text-gray-600">
-            {isPropietari() 
-              ? 'Gestiona les reserves dels teus allotjaments'
-              : 'Gestiona totes les reserves dels allotjaments'
-            }
-          </p>
-        </div>
-        <Button onClick={() => setShowNovaModal(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Reserva
-        </Button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 right-10 w-64 h-64 bg-gradient-to-br from-blue-200 to-purple-200 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+        <div className="absolute bottom-20 left-10 w-80 h-80 bg-gradient-to-tr from-purple-200 to-blue-200 rounded-full blur-3xl opacity-15 animate-pulse delay-300"></div>
       </div>
+      
+      <TooltipProvider>
+        <div className="relative flex flex-col gap-8 py-8 px-6 md:px-8">
+          {/* Header */}
+          <div className="animate-in fade-in-2 slide-in-from-top-4 duration-1000">
+            <div className="flex justify-between items-center bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-xl">
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                  {isPropietari() ? 'Les Meves Reserves' : 'Reserves'}
+                </h1>
+                <p className="text-lg text-gray-600">
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    {isPropietari() 
+                      ? 'Gestiona les reserves dels teus allotjaments'
+                      : 'Gestiona totes les reserves dels allotjaments'
+                    }
+                  </span>
+                </p>
+              </div>
+              <Button onClick={() => setShowNovaModal(true)} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl h-12 px-6">
+                <Plus className="mr-2 h-5 w-5" />
+                Nova Reserva
+              </Button>
+            </div>
+          </div>
 
-      {/* Filtres */}
-      <div className="bg-white p-4 rounded-lg border space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="font-medium flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Filtres
-          </h3>
-          <Button variant="outline" size="sm" onClick={clearFilters}>
-            Neteja filtres
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Cerca per client, codi..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Filtres */}
+          <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-200">
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl p-8 shadow-xl">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Filter className="h-4 w-4 text-white" />
+                  </div>
+                  Filtres
+                </h3>
+                <Button variant="outline" size="sm" onClick={clearFilters} className="border-gray-200 rounded-xl hover:bg-blue-50 transition-colors duration-300">
+                  Neteja filtres
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 transition-colors duration-300 group-focus-within:text-blue-600" />
+                  <Input
+                    placeholder="Cerca per client, codi..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-12 transition-all duration-300"
+                  />
+                </div>
+                
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-12 transition-all duration-300">
+                    <SelectValue placeholder="Estat" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                    <SelectItem value="all" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Tots els estats</SelectItem>
+                    <SelectItem value="pendent_confirmacio" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Pendent</SelectItem>
+                    <SelectItem value="confirmada" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Confirmada</SelectItem>
+                    <SelectItem value="pagada" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Pagada</SelectItem>
+                    <SelectItem value="entrada" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Check-in</SelectItem>
+                    <SelectItem value="sortida" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Check-out</SelectItem>
+                    <SelectItem value="cancel·lada" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Cancel·lada</SelectItem>
+                    <SelectItem value="no_presentat" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">No presentat</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={estatPagamentFilter} onValueChange={setEstatPagamentFilter}>
+                  <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-12 transition-all duration-300">
+                    <SelectValue placeholder="Estat pagament" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                    <SelectItem value="all" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Tots els pagaments</SelectItem>
+                    <SelectItem value="pendent" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Pendent</SelectItem>
+                    <SelectItem value="pagament_parcial" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Parcial</SelectItem>
+                    <SelectItem value="pagat_complet" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Pagada</SelectItem>
+                    <SelectItem value="reemborsat_parcial" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Reemb. Parcial</SelectItem>
+                    <SelectItem value="reemborsat_complet" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Reemborsada</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={plataformaFilter} onValueChange={setPlataformaFilter}>
+                  <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-12 transition-all duration-300">
+                    <SelectValue placeholder="Plataforma" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border-gray-200 rounded-xl shadow-xl">
+                    <SelectItem value="all" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Totes les plataformes</SelectItem>
+                    <SelectItem value="Booking" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Booking</SelectItem>
+                    <SelectItem value="Airbnb" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Airbnb</SelectItem>
+                    <SelectItem value="Expedia" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Expedia</SelectItem>
+                    <SelectItem value="Directa" className="rounded-lg hover:bg-blue-50 transition-colors duration-200">Directa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Data entrada des de:</label>
+                  <Input
+                    type="date"
+                    value={dataInici}
+                    onChange={(e) => setDataInici(e.target.value)}
+                    className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-12 transition-all duration-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Data entrada fins:</label>
+                  <Input
+                    type="date"
+                    value={dataFi}
+                    onChange={(e) => setDataFi(e.target.value)}
+                    className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl h-12 transition-all duration-300"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Estat" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tots els estats</SelectItem>
-              <SelectItem value="pendent_confirmacio">Pendent</SelectItem>
-              <SelectItem value="confirmada">Confirmada</SelectItem>
-              <SelectItem value="pagada">Pagada</SelectItem>
-              <SelectItem value="entrada">Check-in</SelectItem>
-              <SelectItem value="sortida">Check-out</SelectItem>
-              <SelectItem value="cancel·lada">Cancel·lada</SelectItem>
-              <SelectItem value="no_presentat">No presentat</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={estatPagamentFilter} onValueChange={setEstatPagamentFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Estat pagament" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tots els pagaments</SelectItem>
-              <SelectItem value="pendent">Pendent</SelectItem>
-              <SelectItem value="pagament_parcial">Parcial</SelectItem>
-              <SelectItem value="pagat_complet">Pagada</SelectItem>
-              <SelectItem value="reemborsat_parcial">Reemb. Parcial</SelectItem>
-              <SelectItem value="reemborsat_complet">Reemborsada</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={plataformaFilter} onValueChange={setPlataformaFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Plataforma" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Totes les plataformes</SelectItem>
-              <SelectItem value="Booking">Booking</SelectItem>
-              <SelectItem value="Airbnb">Airbnb</SelectItem>
-              <SelectItem value="Expedia">Expedia</SelectItem>
-              <SelectItem value="Directa">Directa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Data entrada des de:</label>
-            <Input
-              type="date"
-              value={dataInici}
-              onChange={(e) => setDataInici(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Data entrada fins:</label>
-            <Input
-              type="date"
-              value={dataFi}
-              onChange={(e) => setDataFi(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* Taula */}
-      <div className="rounded-md border">
-        <Table>
+          {/* Taula */}
+          <div className="animate-in fade-in-2 slide-in-from-bottom-4 duration-1000 delay-400">
+            <div className="bg-white/80 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl overflow-hidden">
+              <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Codi</TableHead>
@@ -593,51 +611,57 @@ export default function Reserves() {
               ))
             )}
           </TableBody>
-        </Table>
-        
-        {/* Paginació */}
-        {pagination && pagination.last_page > 1 && (
-          <div className="p-4 border-t flex justify-between items-center">
-            <div className="text-sm text-muted-foreground">
-              Mostrant {pagination.from}-{pagination.to} de {pagination.total} reserves
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Anterior
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === pagination.last_page}
-              >
-                Següent
-              </Button>
+              </Table>
+              
+              {/* Paginació */}
+              {pagination && pagination.last_page > 1 && (
+                <div className="p-6 border-t border-gray-200 bg-white/50 backdrop-blur-sm">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-600 font-medium">
+                      Mostrant {pagination.from}-{pagination.to} de {pagination.total} reserves
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="border-gray-200 rounded-xl hover:bg-blue-50 transition-colors duration-300"
+                      >
+                        Anterior
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === pagination.last_page}
+                        className="border-gray-200 rounded-xl hover:bg-blue-50 transition-colors duration-300"
+                      >
+                        Següent
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Modal per afegir nova reserva */}
-      <NovaReservaModal
-        open={showNovaModal}
-        onOpenChange={setShowNovaModal}
-        onSuccess={() => loadReserves()}
-      />
+          {/* Modal per afegir nova reserva */}
+          <NovaReservaModal
+            open={showNovaModal}
+            onOpenChange={setShowNovaModal}
+            onSuccess={() => loadReserves()}
+          />
 
-      {/* Modal per editar reserva */}
-      <EditReservaModal
-        open={showEditModal}
-        onOpenChange={setShowEditModal}
-        reserva={reservaToEdit}
-        onSuccess={handleEditSuccess}
-      />
-      </div>
-    </TooltipProvider>
+          {/* Modal per editar reserva */}
+          <EditReservaModal
+            open={showEditModal}
+            onOpenChange={setShowEditModal}
+            reserva={reservaToEdit}
+            onSuccess={handleEditSuccess}
+          />
+        </div>
+      </TooltipProvider>
+    </div>
   )
 }
