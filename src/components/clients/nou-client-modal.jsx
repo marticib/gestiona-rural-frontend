@@ -241,74 +241,93 @@ export function NouClientModal({ open, onOpenChange, onSuccess }) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <IconUser className="h-5 w-5" />
-            Nou Client
-          </DialogTitle>
-          <DialogDescription>
-            Afegeix un nou client al sistema. Els camps marcats amb * són obligatoris.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Informació personal */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b pb-2">Informació Personal</h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nom">Nom *</Label>
-                <Input
-                  id="nom"
-                  {...register('nom', { 
-                    required: 'El nom és obligatori',
-                    minLength: { value: 2, message: 'El nom ha de tenir almenys 2 caràcters' }
-                  })}
-                  placeholder="Nom del client"
-                  className={errors.nom ? 'border-red-500' : ''}
-                />
-                <FieldError error={errors.nom} />
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-0 shadow-2xl backdrop-blur-xl">
+        {/* Background decorations */}
+        <div className="absolute top-4 -left-4 w-24 h-24 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
+        <div className="absolute bottom-4 -right-4 w-24 h-24 bg-gradient-to-r from-teal-100 to-emerald-100 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
+        
+        <div className="relative">
+          <DialogHeader className="space-y-4 pb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <IconUser className="h-6 w-6 text-white" />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cognoms">Cognoms *</Label>
-                <Input
-                  id="cognoms"
-                  {...register('cognoms', { 
-                    required: 'Els cognoms són obligatoris',
-                    minLength: { value: 2, message: 'Els cognoms han de tenir almenys 2 caràcters' }
-                  })}
-                  placeholder="Cognoms del client"
-                  className={errors.cognoms ? 'border-red-500' : ''}
-                />
-                <FieldError error={errors.cognoms} />
+              <div>
+                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                  Nou Client
+                </DialogTitle>
+                <DialogDescription className="text-gray-600 mt-1">
+                  Afegeix un nou client al sistema. Els camps marcats amb * són obligatoris.
+                </DialogDescription>
               </div>
             </div>
+          </DialogHeader>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="dni">DNI *</Label>
-                <Input
-                  id="dni"
-                  {...register('dni', { 
-                    required: 'El DNI és obligatori',
-                    pattern: { 
-                      value: /^[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/i, 
-                      message: 'Format de DNI invàlid (ex: 12345678A)' 
-                    },
-                    onChange: (e) => {
-                      // Netejar errors de servidor quan l'usuari comença a escriure
-                      if (errors.dni && errors.dni.type === 'server') {
-                        clearErrors('dni')
-                      }
-                      return e
-                    }
-                  })}
-                  placeholder="12345678A"
-                  style={{ textTransform: 'uppercase' }}
-                  className={errors.dni ? 'border-red-500' : ''}
+          <div className="overflow-y-auto max-h-[70vh] pr-2">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              {/* Informació personal */}
+              <div className="bg-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 space-y-6 shadow-lg">
+                <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                    <IconUser className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    Informació Personal
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="nom" className="text-sm font-medium text-gray-700">Nom *</Label>
+                    <Input
+                      id="nom"
+                      {...register('nom', { 
+                        required: 'El nom és obligatori',
+                        minLength: { value: 2, message: 'El nom ha de tenir almenys 2 caràcters' }
+                      })}
+                      placeholder="Nom del client"
+                      className={`bg-white/80 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl transition-all duration-300 ${errors.nom ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    <FieldError error={errors.nom} />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="cognoms" className="text-sm font-medium text-gray-700">Cognoms *</Label>
+                    <Input
+                      id="cognoms"
+                      {...register('cognoms', { 
+                        required: 'Els cognoms són obligatoris',
+                        minLength: { value: 2, message: 'Els cognoms han de tenir almenys 2 caràcters' }
+                      })}
+                      placeholder="Cognoms del client"
+                      className={`bg-white/80 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl transition-all duration-300 ${errors.cognoms ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    <FieldError error={errors.cognoms} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="dni" className="text-sm font-medium text-gray-700">DNI *</Label>
+                    <Input
+                      id="dni"
+                      {...register('dni', { 
+                        required: 'El DNI és obligatori',
+                        pattern: { 
+                          value: /^[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/i, 
+                          message: 'Format de DNI invàlid (ex: 12345678A)' 
+                        },
+                        onChange: (e) => {
+                          // Netejar errors de servidor quan l'usuari comença a escriure
+                          if (errors.dni && errors.dni.type === 'server') {
+                            clearErrors('dni')
+                          }
+                          return e
+                        }
+                      })}
+                      placeholder="12345678A"
+                      style={{ textTransform: 'uppercase' }}
+                      className={`bg-white/80 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl transition-all duration-300 ${errors.dni ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}
                 />
                 <FieldError error={errors.dni} />
               </div>
@@ -649,11 +668,14 @@ export function NouClientModal({ open, onOpenChange, onSuccess }) {
             <Button
               type="submit"
               disabled={loading}
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 rounded-xl px-8 py-2.5 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
             >
               {loading ? 'Creant...' : 'Crear Client'}
             </Button>
           </div>
-        </form>
+          </form>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

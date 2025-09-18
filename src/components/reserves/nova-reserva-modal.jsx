@@ -309,35 +309,54 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <IconCalendar className="h-5 w-5" />
-            Nova Reserva
-          </DialogTitle>
-          <DialogDescription>
-            Crea una nova reserva al sistema. Els camps marcats amb * són obligatoris.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 border-0 shadow-2xl backdrop-blur-xl">
+        {/* Background decorations */}
+        <div className="absolute top-4 -left-4 w-24 h-24 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
+        <div className="absolute bottom-4 -right-4 w-24 h-24 bg-gradient-to-r from-cyan-100 to-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
+        
+        <div className="relative">
+          <DialogHeader className="space-y-4 pb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <IconCalendar className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                  Nova Reserva
+                </DialogTitle>
+                <DialogDescription className="text-gray-600 mt-1">
+                  Crea una nova reserva al sistema. Els camps marcats amb * són obligatoris.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Selecció de client i allotjament */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b pb-2">Client i Allotjament</h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="client_id">Client *</Label>
+          <div className="overflow-y-auto max-h-[70vh] pr-2">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              {/* Selecció de client i allotjament */}
+              <div className="bg-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 space-y-6 shadow-lg">
+                <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                    <IconHome className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                    Client i Allotjament
+                  </h3>
+                </div>
                 
-                <div className="flex gap-2">
-                  <Controller
-                    name="client_id"
-                    control={control}
-                    rules={{ required: 'Cal seleccionar un client' }}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger className={`flex-1 ${errors.client_id ? 'border-red-500' : ''}`}>
-                          <SelectValue placeholder="Selecciona un client" />
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="client_id" className="text-sm font-medium text-gray-700">Client *</Label>
+                    
+                    <div className="flex gap-3">
+                      <Controller
+                        name="client_id"
+                        control={control}
+                        rules={{ required: 'Cal seleccionar un client' }}
+                        render={({ field }) => (
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger className={`flex-1 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300 ${errors.client_id ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                              <SelectValue placeholder="Selecciona un client" />
                         </SelectTrigger>
                         <SelectContent>
                           {clients.map((client) => (
@@ -475,15 +494,15 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
                 </Collapsible>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="allotjament_id">Allotjament *</Label>
+              <div className="space-y-3">
+                <Label htmlFor="allotjament_id" className="text-sm font-medium text-gray-700">Allotjament *</Label>
                 <Controller
                   name="allotjament_id"
                   control={control}
                   rules={{ required: 'Cal seleccionar un allotjament' }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className={errors.allotjament_id ? 'border-red-500' : ''}>
+                      <SelectTrigger className={`bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300 ${errors.allotjament_id ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}>
                         <SelectValue placeholder="Selecciona un allotjament" />
                       </SelectTrigger>
                       <SelectContent>
@@ -505,40 +524,47 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
           </div>
 
           {/* Dates i persones */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b pb-2">Dates i Persones</h3>
+          <div className="bg-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 space-y-6 shadow-lg">
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <IconCalendar className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                Dates i Persones
+              </h3>
+            </div>
             
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="data_entrada">Data d'entrada *</Label>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="data_entrada" className="text-sm font-medium text-gray-700">Data d'entrada *</Label>
                 <Input
                   id="data_entrada"
                   type="date"
                   {...register('data_entrada', { 
                     required: 'La data d\'entrada és obligatòria'
                   })}
-                  className={errors.data_entrada ? 'border-red-500' : ''}
+                  className={`bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300 ${errors.data_entrada ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}
                 />
                 <FieldError error={errors.data_entrada} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="data_sortida">Data de sortida *</Label>
+              <div className="space-y-3">
+                <Label htmlFor="data_sortida" className="text-sm font-medium text-gray-700">Data de sortida *</Label>
                 <Input
                   id="data_sortida"
                   type="date"
                   {...register('data_sortida', { 
                     required: 'La data de sortida és obligatòria'
                   })}
-                  className={errors.data_sortida ? 'border-red-500' : ''}
+                  className={`bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300 ${errors.data_sortida ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}
                 />
                 <FieldError error={errors.data_sortida} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="persones">Persones *</Label>
+              <div className="space-y-3">
+                <Label htmlFor="persones" className="text-sm font-medium text-gray-700">Persones *</Label>
                 <div className="relative">
-                  <IconUsers className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <IconUsers className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input
                     id="persones"
                     type="number"
@@ -548,7 +574,7 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
                       valueAsNumber: true,
                       min: { value: 1, message: 'Ha de ser almenys 1 persona' }
                     })}
-                    className={`pl-9 ${errors.persones ? 'border-red-500' : ''}`}
+                    className={`pl-10 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300 ${errors.persones ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}
                   />
                 </div>
                 <FieldError error={errors.persones} />
@@ -557,8 +583,8 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
 
             {/* Informació calculada */}
             {nitsCalculades > 0 && (
-              <div className="bg-muted p-3 rounded-lg">
-                <p className="text-sm text-muted-foreground">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 p-4 rounded-xl">
+                <p className="text-sm text-blue-800">
                   <strong>Nits:</strong> {nitsCalculades} | 
                   <strong> Preu total calculat:</strong> {preuCalculat.toFixed(2)}€
                 </p>
@@ -567,14 +593,21 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
           </div>
 
           {/* Preu i pagament */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b pb-2">Preu i Pagament</h3>
+          <div className="bg-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 space-y-6 shadow-lg">
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <IconCurrencyEuro className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                Preu i Pagament
+              </h3>
+            </div>
             
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="preu_per_nit">Preu per nit (€) *</Label>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="preu_per_nit" className="text-sm font-medium text-gray-700">Preu per nit (€) *</Label>
                 <div className="relative">
-                  <IconCurrencyEuro className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <IconCurrencyEuro className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input
                     id="preu_per_nit"
                     type="number"
@@ -585,45 +618,45 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
                       valueAsNumber: true,
                       min: { value: 0.01, message: 'El preu ha de ser major que 0' }
                     })}
-                    className={`pl-9 ${errors.preu_per_nit ? 'border-red-500' : ''}`}
+                    className={`pl-10 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300 ${errors.preu_per_nit ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}
                   />
                 </div>
                 <FieldError error={errors.preu_per_nit} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="nits">Nits</Label>
+              <div className="space-y-3">
+                <Label htmlFor="nits" className="text-sm font-medium text-gray-700">Nits</Label>
                 <Input
                   id="nits"
                   type="number"
                   {...register('nits')}
                   readOnly
-                  className="bg-muted"
+                  className="bg-gray-50 border-gray-200 rounded-xl text-gray-600"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="preu_total">Preu total (€)</Label>
+              <div className="space-y-3">
+                <Label htmlFor="preu_total" className="text-sm font-medium text-gray-700">Preu total (€)</Label>
                 <Input
                   id="preu_total"
                   type="number"
                   step="0.01"
                   {...register('preu_total')}
                   readOnly
-                  className="bg-muted font-semibold"
+                  className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200 rounded-xl font-semibold text-blue-800"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="metode_pagament">Mètode de pagament</Label>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="metode_pagament" className="text-sm font-medium text-gray-700">Mètode de pagament</Label>
                 <Controller
                   name="metode_pagament"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className={errors.metode_pagament ? 'border-red-500' : ''}>
+                      <SelectTrigger className={`bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300 ${errors.metode_pagament ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}>
                         <SelectValue placeholder="Selecciona el mètode" />
                       </SelectTrigger>
                       <SelectContent>
@@ -639,14 +672,14 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
                 <FieldError error={errors.metode_pagament} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="estat">Estat de la reserva</Label>
+              <div className="space-y-3">
+                <Label htmlFor="estat" className="text-sm font-medium text-gray-700">Estat de la reserva</Label>
                 <Controller
                   name="estat"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className={errors.estat ? 'border-red-500' : ''}>
+                      <SelectTrigger className={`bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300 ${errors.estat ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''}`}>
                         <SelectValue placeholder="Selecciona l'estat" />
                       </SelectTrigger>
                       <SelectContent>
@@ -663,42 +696,49 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 p-4 rounded-xl">
               <input
                 id="pagat"
                 type="checkbox"
                 {...register('pagat')}
-                className="rounded border-gray-300"
+                className="rounded border-gray-300 text-green-600 focus:ring-green-500 w-4 h-4"
               />
-              <Label htmlFor="pagat" className="text-sm font-normal">
+              <Label htmlFor="pagat" className="text-sm font-medium text-green-800">
                 Marcar com a pagat
               </Label>
             </div>
           </div>
 
           {/* Notes */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b pb-2">Notes</h3>
+          <div className="bg-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 space-y-6 shadow-lg">
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <IconFileText className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                Notes
+              </h3>
+            </div>
             
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="notes_client">Notes del client</Label>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="notes_client" className="text-sm font-medium text-gray-700">Notes del client</Label>
                 <Textarea
                   id="notes_client"
                   {...register('notes_client')}
                   placeholder="Comentaris o peticions especials del client..."
-                  className="min-h-[80px]"
+                  className="min-h-[80px] bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300"
                 />
                 <FieldError error={errors.notes_client} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="notes_internes">Notes internes</Label>
+              <div className="space-y-3">
+                <Label htmlFor="notes_internes" className="text-sm font-medium text-gray-700">Notes internes</Label>
                 <Textarea
                   id="notes_internes"
                   {...register('notes_internes')}
                   placeholder="Notes internes per a l'equip..."
-                  className="min-h-[80px]"
+                  className="min-h-[80px] bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl transition-all duration-300"
                 />
                 <FieldError error={errors.notes_internes} />
               </div>
@@ -706,23 +746,27 @@ export function NovaReservaModal({ open, onOpenChange, onSuccess }) {
           </div>
 
           {/* Botons */}
-          <div className="flex justify-end gap-3 pt-6 border-t">
+          <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
               disabled={loading}
+              className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl px-6 py-2.5 transition-all duration-300"
             >
               Cancel·lar
             </Button>
             <Button
               type="submit"
               disabled={loading}
+              className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white border-0 rounded-xl px-8 py-2.5 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
             >
               {loading ? 'Creant...' : 'Crear Reserva'}
             </Button>
           </div>
-        </form>
+          </form>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )
