@@ -28,10 +28,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar 
       collapsible="offcanvas" 
-      className="bg-gradient-to-b from-white/95 via-white/90 to-white/95 backdrop-blur-xl border-r border-white/20 shadow-2xl"
+      className="bg-transparent from-white/95 via-white/90 to-white/95 backdrop-blur-xl border-r border-white/20 shadow-2xl"
       {...props}
     >
-      <SidebarHeader className="bg-gradient-to-r from-blue-50/80 to-purple-50/80 backdrop-blur-xl border-b border-white/20 px-4 py-6">
+      <SidebarHeader className="bg-transparent from-blue-50/80 to-purple-50/80 backdrop-blur-xl border-b border-white/20 px-4 py-6">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -50,12 +50,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="bg-gradient-to-b from-white/90 to-white/95 backdrop-blur-xl px-2 py-4">
+      <SidebarContent className="bg-transparent from-white/90 to-white/95 backdrop-blur-xl px-2 py-4">
         <NavMain items={navMain} />
         {navDocuments.length > 0 && <NavDocuments items={navDocuments} />}
         {navSecondary.length > 0 && <NavSecondary items={navSecondary} className="mt-auto" />}
       </SidebarContent>
-      <SidebarFooter className="bg-gradient-to-r from-gray-50/80 to-blue-50/80 backdrop-blur-xl border-t border-white/20 px-2 py-4">
+      <SidebarFooter className="bg-transparent from-gray-50/80 to-blue-50/80 backdrop-blur-xl border-t border-white/20 px-2 py-4">
         <NavUser />
       </SidebarFooter>
     </Sidebar>
